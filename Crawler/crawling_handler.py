@@ -35,7 +35,7 @@ from tqdm import tqdm
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.tools import argparser
-
+from multiprocessing import Pool
 
 ####youtube live 스트리밍 
 import sys
@@ -50,6 +50,8 @@ import lzstring
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from file_handler import FileHandler
+
+from multiprocessing import Process, Lock, Pool
 
 # Set DEVELOPER_KEY to the API key value from the APIs & auth > Registered apps
 # tab of
@@ -189,11 +191,12 @@ class CrawlingHandler :
             ##sys.stdout.write(search_url)
             soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
             author = ""
+            
             try:
                 ul = soup.find("ul",{"class":"list_news"})
                 
             except:
-                #print("error navernews ul")
+  
                 pass
             try:
                 lis = ul.find_all("li")
@@ -227,7 +230,7 @@ class CrawlingHandler :
                         if url in had_url: continue
                         else: had_url.append(url)
                         docs.append([url,title,author])
-                except:
+                except:    
                     continue
                     
                 
@@ -481,8 +484,11 @@ class CrawlingHandler :
         docs = []
         page = 1
         had_url = self.sh.loadURL('naverblog', keyword)
+        
         #google-chrome --remote-debugging-port=9222 --user-data-dir="~/workspace/test/knowledge_based_sentiment_analysis_community_crawler/ChromeProfile"
         chrome_options = webdriver.ChromeOptions()
+        
+
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument("--ignore-certificate-error")
@@ -544,7 +550,7 @@ class CrawlingHandler :
                     print(e)
                     break
             page+=1
-            if page >10: break
+            if page >20: break
             idx = page%10
             if idx!=1:
                 if idx==0:
@@ -579,7 +585,7 @@ class CrawlingHandler :
         doc_cnt = 0
         print("crawling document : %d" %total_url)
         for url in tqdm(urls):
-            if page_cnt == 10 :
+            if page_cnt == 500 :
             #driver.execute_script('window.open("https://naver.com");')
                 handle +=1
                 time.sleep(random.random())
@@ -680,18 +686,8 @@ class CrawlingHandler :
         driver.find_element_by_xpath(xpath).click()
         ActionChains(driver).key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
         time.sleep(1)
-    def navercafe_list_crawling(self,keyword):
-        
-        query = self.quote(keyword)
-        docs = []
-        had_url = self.sh.loadURL('navercafe',keyword)
 
-        had_title= self.sh.loadTitle('navercafe', keyword)
-        #print(had_title)
-        #google-chrome --remote-debugging-port=9222 --user-data-dir="~/workspace/test/knowledge_based_sentiment_analysis_community_crawler/ChromeProfile"
-        id = 'minamom501'
-        pw = 'lalala1983'
-
+    def multiprocessing_navercafe(self,keyword):
         cafe_list = [
         'ilovegm1'
         ,'dongtanmom'
@@ -741,8 +737,8 @@ class CrawlingHandler :
         ,'dfither'#던파
         ,'peopledisc'#척추질환
         ,'ketogenic'#저탄고지
-        ,'appleiphone'#애플 아사모
-        ,'dokchi'#독취사
+        ,'appleiphone'#애플 아사모,
+        'dokchi'#독취사
         #,'kig' # 피터팬 방구하기
         ,'specup'#스펙업
         ,'onepieceholicplus'#월급쟁이 재테크
@@ -809,6 +805,172 @@ class CrawlingHandler :
         ,'lfckorea'
         ,'dogpalza'#강사모
         ]
+        self.distributeList(2, keyword, 'navercafe',cafe_list, self.navercafe_list_crawling)
+
+
+    def distributeList(self, n, keyword, proc_name, list, func):
+        
+        
+
+
+        length = len(list)
+        if length < 1: return
+        if length < n:
+            n = length # n = p_cnt list 개수, length가 p_cnt 보다 작으면 p_cnt값을 줄여라
+        print (proc_name+' Multi-Process :'+str(n)+', List :'+str(length))
+        each = int(length/n)
+        remains = length%n
+        allocated = 0
+        procs = []
+        for i in range(1, n+1):
+            if allocated+each < length :
+                end_index = allocated + each
+                if remains > 0:
+                    end_index = end_index+1
+                    remains = remains-1
+                docs = list[allocated:end_index]
+                allocated = end_index
+            else :
+                docs = list[allocated:]
+            procs.append(Process(target=func, args=(i,keyword, docs)))
+
+        for p in procs :
+            p.start()
+        for p in procs :
+            p.join()
+
+    
+
+
+
+    def navercafe_list_crawling(self,i,keyword, cafe_list):
+        query = self.quote(keyword)
+        docs = []
+        had_url = self.sh.loadURL('navercafe',keyword)
+
+        had_title= self.sh.loadTitle('navercafe', keyword)
+        #print(had_title)
+        #google-chrome --remote-debugging-port=9222 --user-data-dir="~/workspace/test/knowledge_based_sentiment_analysis_community_crawler/ChromeProfile"
+        id = 'minamom501'
+        pw = 'lalala1983'
+
+        # cafe_list = [
+        # 'ilovegm1'
+        # ,'dongtanmom'
+        # ,'isajime'
+        # ,'ghdi58'#닌텐도
+        # ,'imsanbu'
+        # ,'skybluezw4rh'
+        # ,'cosmania'
+        # ,'jaegebal'
+        # ,'msbabys'
+        # ,'malltail'
+        # ,'3dpchip'
+        # ,'dgmom365'
+        # ,'mktsesang'
+        # #,'mom79'
+        # ,'junkart'
+        # #,'kyungmammo'
+        # ,'masanmam'
+        # ,'anycallusershow'#삼성핸드폰
+        # ,'inmacbook'#맥북
+        # ,'sssw'#나이키
+        # ,'costco12'#코스트코
+        # ,'komusincafe'#곰신
+        # ,'campingfirst'#캠핑
+        # ,'fx8300'#AMD
+        # ,'bebettergirls'#취업대학교
+        # ,'bodygood'#헬스매니아
+        # ,'movie02'#네영카
+        # ,'hotellife'#스사사
+        # ,'xst'#샤오미
+        # ,'shopjirmsin'#쇼핑지름신
+        # ,'zzang9daddy'#짱구대디
+        # ,'no1sejong'#세종시
+        # ,'singeriu'#아이유
+        # ,'steamindiegame'# 우왁굳
+        # ,'iroid'#싼타페
+        # ,'byungs94'#수원맘
+        # ,'toeicamp'#토익캠프
+        # ,'drhp'#닥터헤드폰
+        # ,'camsbaby'#천아베베
+        # ,'koreakmc'#송파강동맘
+        # ,'05425' # 맨살모임
+        # ,'playbattlegrounds'#배틀그라운드
+        # ,'futurefight' #퓨처파이트
+        # ,'sevenknights'#세븐나이츠
+        # ,'lolkor'#롤
+        # ,'dfither'#던파
+        # ,'peopledisc'#척추질환
+        # ,'ketogenic'#저탄고지
+        # ,'appleiphone'#애플 아사모,
+        # 'dokchi'#독취사
+        # #,'kig' # 피터팬 방구하기
+        # ,'specup'#스펙업
+        # ,'onepieceholicplus'#월급쟁이 재테크
+        # ,'momingrnyj'#구리 남양주맘
+        # ,'workee'#직장인
+        # ,'sujilovemom'#용인수지맘
+        # ,'momakakao'#모두의 마블
+        # ,'fifaco'#피파온라인
+        # ,'ps3friend'#ps5와 친구들
+        # ,'xbox360korea'#xbox
+        # ,'cookierun' #쿠키런
+        # ,'bestani' #애니타운
+        # ,'logosesang'#로고세상
+        # #,'tmfql8967'#소녀시대
+        # ,'bigbang2me'#빅뱅
+        # ,'hmckorea'#현대차
+        # ,'shootgoal'#벤츠
+        # ,'nds07'# 배달세상  등업필요
+        # ,'scottycameron'#클럽카메론
+        # ,'star2mania'#테슬라
+        # ,'dieselmania'#디젤매니아
+        # ,'bk1009'#급매물과 반값매매
+        # ,'stockstudys' #세뇨르의 성공적인 투자를 위한 주식공부방
+        # ,'30talmo'#탈모방
+        # ,'themukja'#더먹자
+        # ,'w3fate'# 창업
+        # ,'jihosoccer123' # 아프니까 사장이다.
+        # ,'guamfree'#괌
+        # ,'wecando7'#월급쟁이 부자들.
+        # ,'ishift'#내집장만 아카데미
+        # ,'dohak27'#굿싱
+        # ,'perfumelove'#향수사랑
+        # ,'smartbargain'#스마트 바겐
+        # ,'jpnstory'#네일동
+        # ,'warcraftgamemap'#다낭고스트
+        # ,'firenze' #유럽여행
+        # ,'pnmath'#포만한
+        # ,'rksghwhantk'#/..
+        # ,'mhs01'#마이스터고
+        # ,'hillstate1800'#현명한 소비
+        # ,'rainup'#아름다운 내집갖기
+        # ,'formsunmyeong'#잠백이
+        # ,'culturebloom'#컬쳐블룸
+        # ,'bikecargogo'# 바튜매
+        # ,'temadica' # 사진동호회
+        # ,'develoid' # 디벨로이드
+        # ,'army58cafe'#군인아들부모님
+        # ,'a60a70' #제네시스
+        # ,'tocop' # 경공
+        # ,'akdongfan' #악뮤
+        # ,'idiolle' #제주도한달살기
+        # ,'sbstvdocu' #그알
+        # ,'hotdealcommunity'
+        # , 'likeusstock' #미주미
+        # ,'onimobile' #좀비 고등학교 모바일
+        # ,'chuldo' #철도청
+        # ,'remonterrace'#레몬테라스
+        # ,'lilka' #릴카
+        # ,'youloveu'#레드벨벳
+        # ,'jellyfishkimsejung'#김세정
+        # ,'rapsup' # 힙합
+        # ,'lessoninfo' #래슨인포
+        # ,'as6060' #맨유
+        # ,'lfckorea'
+        # ,'dogpalza'#강사모
+        # ]
         
         #cafe_list = ['iroid']
 
@@ -852,8 +1014,10 @@ class CrawlingHandler :
         chrome_options.add_argument('--incognito')
         chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)#driver 변수 만들 때 단순히 chromedriver 위치만 적어주는 게 아니라 chrome_options라는 이름의 인자를 같이 넘겨줘야함
+
         #이 인자 값으로 위에 추가적인 인자를 넘겨줌
         driver.implicitly_wait(3)
+        driver.switch_to_window(driver.window_handles[i-1])
         # pyautogui.keyDown('ctrl')
         # pyautogui.keyDown('shift')
         # pyautogui.keyDown('n')
@@ -869,48 +1033,13 @@ class CrawlingHandler :
         # time.sleep(1)
         # driver.find_element_by_xpath('//*[@id="frmNIDLogin"]/fieldset/input').click()
         # time.sleep(1)
-        ##############################################################
-
-    
         url = "none"
         K=0
         handle = 0
         page_cnt = 0
         return_cnt = 0
         random.shuffle(cafe_list)
-        '''
-        for cafe in cafe_list:
-            #if K < len(cafe_list)-1: K+=1;continue
-            progressBar(K, len(cafe_list))
-            K+=1
-            xpath = xpath_dict[cafe]
-            cur_url = search_url+cafe
-            driver.get(cur_url)
-            try:
-                element = WebDriverWait(driver,2).until(
-                    EC.presence_of_element_located((By.ID,'topLayerQueryInput'))
-                )
-            except: continue
-            #time.sleep(2)
-            driver.execute_script("document.getElementById('topLayerQueryInput').value =\'"+keyword+"\'")
-            try:
-                element = WebDriverWait(driver,2).until(
-                    EC.presence_of_element_located((By.XPATH,xpath))
-                )
-                
-            except: 
-                print("error on : "+cafe)
-                continue
-            try:
-                btn = driver.find_element_by_xpath(xpath)
-                btn.click()
-            except: q
-                print("cafe btn xpath error " + cafe)
-                continue
-            continue
-        #
-        '''  
-        ######################################################################
+
         for cafe in cafe_list:
             #if K < len(cafe_list)-1: K+=1;continue
             progressBar(K, len(cafe_list))
@@ -979,42 +1108,7 @@ class CrawlingHandler :
                         #IFrame을 찾는 작업 존재하냐
                     )
                 except: break
-                # if page >1:
-                #     if page <=11:
-                #         #//*[@id="main-area"]/div[7]/a[1]
-                #         try:
-                #             btn = driver.find_element_by_xpath('//*[@id="main-area"]/div[7]/a[%s]' %(page))
-                #             page_url = btn.get_attribute("href")
-                #             print(page_url[:-1])
-                #             btn.send_keys(Keys.ENTER)
-                            
-                #         except Exception as e:
-                #             print("Exception 0")
-                #             print(e)
-                #             break
-                #         #//*[@id="main-area"]/div[7]/a[11]
-                #     elif page%10==1:  # 다음 버튼 눌러야하는 경우
-                #         try:
-                #             driver.find_element_by_xpath('//*[@id="main-area"]/div[7]/a[12]').send_keys(Keys.ENTER)
-                #             #그냥 다음버튼 누르면 됨
-                #         except Exception as e:
-                #             print("Exception 1")
-                #             break
-                #     elif page%10!=0:
-                        
-                #         try:
-                #             driver.find_element_by_xpath('//*[@id="main-area"]/div[7]/a[%s]' %(page%10+1)).send_keys(Keys.ENTER)
-                #             #이전버튼이 있기 때문에 +1해줘야함
-                #         except Exception as e:
-                #             print("Exception 2")
-                #             break
-                #     else:
-                #         try:
-                #             driver.find_element_by_xpath('//*[@id="main-area"]/div[7]/a[%s]' %(page%10+11)).send_keys(Keys.ENTER)
-                #         except Exception as e:
-                #             print("Exception 3")
-                #             break
-
+                
                 
                 time.sleep(0.3)
                 driver.switch_to.frame("cafe_main")#IFrame을 cafe_main으로 변경
@@ -1049,15 +1143,8 @@ class CrawlingHandler :
                     
                     try:
                         if minipage==1:
-                            ###########
                             try:
-                                # try:
-                                #     element = WebDriverWait(driver,1).until(
-                                #     EC.presence_of_element_located((By.XPATH,'//*[@id="main-area"]/div[5]/table/tbody/tr[%s]/td[1]/div[2]/div/a' %(minipage)))
-                                #     )#minipage마다의 xpath 찾기//*[@id="main-area"]/div[5]/table/tbody/tr[1]/td[1]/div[2]/div/a[1]//*[@id="main-area"]/div[5]/table/tbody/tr[1]/td[1]/div[2]/div/a[1]
-                                # except:
-                                #     flag = False
-                                #     pass
+                              
                                 try:    
                                     element = WebDriverWait(driver,1).until(
                                     EC.presence_of_element_located((By.XPATH,'//*[@id="main-area"]/div[5]/table/tbody/tr[%s]/td[1]/div[2]/div/a[1]' %(minipage)))
@@ -1068,11 +1155,7 @@ class CrawlingHandler :
                                     pass
                             except: pass
                             if flag == False: break
-                            ##########
-                            # try:
-                            #     btn = driver.find_element_by_xpath('//*[@id="main-area"]/div[5]/table/tbody/tr[%s]/td[1]/div[2]/div/a' %(minipage))    
-                            # except:
-                            #     pass
+                         
                             try:
                                 btn = driver.find_element_by_xpath('//*[@id="main-area"]/div[5]/table/tbody/tr[%s]/td[1]/div[2]/div/a[1]' %(minipage))    
                             except:
@@ -1126,7 +1209,7 @@ class CrawlingHandler :
                     ###########글에 들어가 면 바로 iframe 변경!
                     #driver.switch_to.frame("cafe_main")
                     try:
-                        element = WebDriverWait(driver,4).until(
+                        element = WebDriverWait(driver,1).until(
                         EC.presence_of_element_located((By.XPATH,'//*[@id="app"]/div/div/div[2]/div[2]/div[1]'))
                         )
                     except: driver.back();continue
@@ -1157,31 +1240,11 @@ class CrawlingHandler :
                     except:
                         driver.back()
                         continue
-                    # [url,title,date,author,text]
-                    
-                    # if title in had_title:
-                    #     print("had_title!!")
-                    #     driver.back()
-                    #     continue
-                    #\33 58155734 > div > div > div.comment_text_box > p > span
-                    # try:
-                    #     div = soup.find("div",{"class":"article_container"})
-                    #     ps = div.find("div",{"class":"article_viewer"}).find_all("p")
-                    #     #print(ps)
-                    #     for p in ps:
-                    #         span = p.find("span")
-                    #         text =text + ' ' + span.text
-                    #     text = text.replace('\n', ' ')
-                    #    #print(text)
-                    # except Exception as e:
-                    #     print(e)
-                    #     pass
+             
                     try:
                         text = soup.select_one('#app > div > div > div.ArticleContentBox > div.article_container > div.article_viewer > div > div').text
-                        #print('#####')
-                        #print(div)
+            
                     except Exception as e:
-                        #print(e)
                         pass
                     
                     return_list = [url,title,date,author,self.parseContents(text)]

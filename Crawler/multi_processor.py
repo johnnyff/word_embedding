@@ -4,9 +4,10 @@
 # Developer : Jeong Wooyoung, EGLAB, Hongik University
 # Contact   : gunyoung20@naver.com
 
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Lock, Pool
 from crawling_handler import CrawlingHandler
 from storage_handler import StorageHandler
+
 
 
 class MultiCrawler :
@@ -33,10 +34,9 @@ class MultiCrawler :
         crawler = CrawlingHandler()
         
         print('"'+keyword+'" list crawling start from navercafe.')
-        crawler.navercafe_list_crawling(keyword)
- #       print ('"'+keyword+'" documents '+str(len(documents))+' crawling start from facebook.')
- #       self.distributeList(p_cnt,'facebook',keyword,documents,crawler.facebook_docs_crawling)
-
+        # crawler.navercafe_list_crawling(keyword)
+        crawler.multiprocessing_navercafe(keyword)
+     
     def multiCrawlingNaverblog(self,keyword, p_cnt=2):
         crawler = CrawlingHandler()
         print('"'+keyword+'" list crawling start from naverblog.')

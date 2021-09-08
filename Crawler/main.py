@@ -14,7 +14,6 @@ import os
 if __name__ == '__main__' :
     if sys.platform.startswith('linux'):
       print("argv[1] :"+sys.argv[1])
-   # if sys.platform.startswith('win'):
       multiprocessing.freeze_support()
       multiprocessing.set_start_method("spawn")
       
@@ -22,7 +21,6 @@ if __name__ == '__main__' :
 #        keywords = ['홈트']
 
       keywords = sys.argv[1:]
-#        keywords.append(sys.argv[1])
         
         #processes = [mc.multiCrawlingDaum]
         
