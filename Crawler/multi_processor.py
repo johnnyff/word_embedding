@@ -74,7 +74,7 @@ class MultiCrawler :
         #     if url_len==0:
         #        break
         
-        crawler.insta_comment_crawling(keyword)
+        crawler.instagram_crawler(keyword)
         #print ('"'+keyword+'" documents '+str(len(documents))+' crawling start from insta.')
         #self.distributeList(p_cnt,'insta',keyword,documents,crawler.insta_docs_crawling)
     def multiCrawlingRankingNews(self,keyword, p_cnt=2):

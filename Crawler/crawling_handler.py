@@ -1060,7 +1060,7 @@ class CrawlingHandler :
             driver.execute_script("document.getElementById('topLayerQueryInput').value =\'"+keyword+"\'")
             #document.getElementsByName('id')[0].value=\' 는 자바스크립트에서 사용되는 함수
             try:
-                element = WebDriverWait(driver,5).until(
+                element = WebDriverWait(driver,3).until(
                     EC.presence_of_element_located((By.XPATH,xpath))
                 )
             except: 
@@ -1292,15 +1292,18 @@ class CrawlingHandler :
         chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
         driver.get(search_url)
-        Id = driver.find_element_by_name('email')
-        Id.send_keys('elapinsta@gmail.com')
-        password = driver.find_element_by_id('pass')
-        password.send_keys('##sangsoo1')
-        password.submit()
-        time.sleep(1)
-        keyword_area = driver.find_element_by_xpath('q')
-        keyword_area.send_keys(keyword)
-        keyword_area.submit()
+        try :
+            Id = driver.find_element_by_name('email')
+            Id.send_keys('elapinsta@gmail.com')
+            password = driver.find_element_by_id('pass')
+            password.send_keys('##sangsoo1')
+            password.submit()
+            time.sleep(1)
+            keyword_area = driver.find_element_by_xpath('p')
+            keyword_area.send_keys(keyword)
+            keyword_area.submit()
+        except : pass
+        
         time.sleep(1)  # login complete
         temp_list = [['yonhap',''] ]
         for news in temp_list:        
@@ -1582,6 +1585,145 @@ class CrawlingHandler :
             print(msg, end ='')
             time.sleep(0.1)
         return docs
+
+
+
+
+    def instagram_crawler(self, keyword):
+        query = self.quote(keyword)
+        docs = []
+        search_url = 'https://www.instagram.com'
+        had_url = self.sh.loadURL('instagram',keyword)
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
+        driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
+        driver.get(search_url)
+        try :
+            Id = driver.find_element_by_name('username')
+            Id.send_keys('elapinsta@gmail.com')
+            password = driver.find_element_by_id('password')
+            password.send_keys('##sangsoo1')
+            password.submit()
+            time.sleep(4)
+            # keyword_area = driver.find_element_by_xpath('p')
+            # keyword_area.send_keys(keyword)
+            # keyword_area.submit()
+        except : 
+            print("log in error")
+            pass
+
+        try :
+            element = WebDriverWait(driver,1).until(
+                EC.presence_of_element_located((By.XPATH,'/html/body/div[6]/div/div/div/div[3]/button[2]')))
+            element.click()
+        except:
+            pass
+        
+        driver.get("https://www.instagram.com/explore/tags/"+keyword)
+        
+        first_poster = WebDriverWait(driver,10).until(
+                EC.presence_of_element_located((By.XPATH,'//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[1]/a/div[1]/div[2]')))
+
+        first_poster.click()
+        date_object_css="div.k_Q0X.NnvRN > a.c-Yi7 > time._1o9PC.Nzb55" 
+        main_text_object_css="div.C7I1f.X7jCj > div.C4VMK > span" 
+        comment_more_btn="button.dCJp8.afkep" 
+        comment_texts_objects_css="ul.Mr508 > div.ZyFrc > li.gElp9.rUo9f > div.P9YgZ > div.C7I1f > div.C4VMK > span" 
+        print_flag=True
+        next_arrow_btn_css1="._65Bje.coreSpriteRightPaginationArrow" 
+        next_arrow_btn_css2="._65Bje.coreSpriteRightPaginationArrow"
+
+
+
+        
+        wish_num = 10000
+        count_extract = 0 
+
+        check_arrow = True 
+
+        while True:
+            if(count_extract %50 ==0):
+                time.sleep(2)
+            upload_ids = [] 
+            date_times = [] 
+            date_titles = [] 
+            main_texts = [] 
+            comments = [] 
+          
+            if count_extract > wish_num: 
+                break 
+            time.sleep(1.0+random.random()) # 
+            if check_arrow == False: 
+                break 
+                
+            # 날짜
+            try: 
+                date_object = driver.find_element_by_css_selector(date_object_css) 
+                date_time = date_object.get_attribute("datetime") 
+                date_title = date_object.get_attribute("title") 
+            except: 
+                date_time = None 
+                date_title = None 
+                
+            # 본문 
+            try: 
+                main_text_object = driver.find_element_by_css_selector(main_text_object_css) 
+                main_text = main_text_object.text 
+            except: main_text = None 
+
+            # 댓글
+            ## 더보기 버튼 클릭 
+            try: 
+                while True: 
+                    try: 
+                        more_btn = driver.find_element_by_css_selector(comment_more_btn) 
+                        more_btn.click() 
+                    except: break 
+            except: 
+                print("----------------------fail to click more btn----------------------------------") 
+                continue 
+        ## 댓글 데이터  
+            try: 
+                comment_data = " "
+                comment_texts_objects = driver.find_elements_by_css_selector(comment_texts_objects_css) 
+                try: 
+                    for i in range(len(comment_texts_objects)): 
+                        comment_data += comment_texts_objects[i].text
+                except: 
+                    print("fail") 
+            except: 
+                continue
+   
+    
+            date_times.append(date_time) 
+            date_titles.append(date_title) 
+            main_texts.append(main_text) 
+            comments.append(comment_data) 
+            if print_flag: 
+                # print("upload id : ", upload_id) 
+                # print("main : ", main_text) 
+                # print("comment : ", comment_data) 
+                print(count_extract)
+            try: 
+                WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, next_arrow_btn_css1))) 
+                driver.find_element_by_css_selector(next_arrow_btn_css2).click() 
+            except: check_arrow = False 
+
+            try:
+                
+                return_list = [date_time,main_text, comment_data]
+                self.sh.saveInsta(keyword, return_list)
+            except Exception as e:
+                pass
+            
+            count_extract += 1
+
+
+
+          # login complete
 #     def insta_dumper_comment_crawling(self,keyword):
 #         chrome_options = webdriver.ChromeOptions()      
 #         chrome_options.add_argument('--headless')
@@ -4570,7 +4712,7 @@ class CrawlingHandler :
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        #chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
+        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
         docs = []
         query = self.quote(keyword)
@@ -4613,7 +4755,7 @@ class CrawlingHandler :
             except Exception as e:
                 continue
             driver.execute_script("window.scrollTo(0,document.documentElement.scrollHeight);")
-            time.sleep(3.0)
+            time.sleep(1.5)
             if len(urls) > 1000000:
                 break
             if cur_scrollHeight == last_scrollHeight:
@@ -4630,53 +4772,7 @@ class CrawlingHandler :
         # theqoprint(len(docs))
         driver.close()
         return docs
-        '''
-        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=DEVELOPER_KEY)
-        # Call the search.list method to retrieve results matching the specified
-        had_uid = self.sh.loadURL('youtube',keyword)
-        docs = []
-        uids = []
-        videos = []
-        range_terms=180
-        beforeMonth = datetime.datetime.now()-datetime.timedelta(days=range_terms)
-        for i in range(range_terms):
-            now = beforeMonth+datetime.timedelta(days=i)
-#            print('Start Crawling Keyword %s Date %s...'%(keyword, now.strftime('%Y-%m-%d')))
-            # query term.
-            try:
-                search_response = youtube.search().list(
-                    q=keyword,
-                    part='snippet',
-                    maxResults=50,
-                    order='rating',
-                    publishedAfter=now.strftime('%Y-%m-%dT00:00:00Z'),
-                    publishedBefore=now.strftime('%Y-%m-%dT23:59:59Z')
-                ).execute()
-            except Exception as he:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print(he)
-                continue
-
-            # Add each result to the appropriate list, and then display the lists of
-            # matching videos, channels, and playlists.
-            i = 0
-            for search_result in search_response.get('items', []):
-                if search_result['id']['kind'] == 'youtube#video' and not search_result['id']['videoId'] in had_uid:
-                    uids.append(search_result['id']['videoId'])
-                    videos.append(search_result['snippet'])
-                    docs.append(['https://www.youtube.com/watch?v='+search_result['id']['videoId']
-                    ,self.parseContents(search_result['snippet']['title'])
-                    ,self.parseContents(search_result['snippet']['publishedAt'])
-                    ,self.parseContents(search_result['snippet']['channelId'])
-                    ,self.parseContents(search_result['snippet']['description']) ])
-                    i+=1
-
-#            print('Crawling Keyword %s Date %s | %d videos Done.'%(keyword, now.strftime('%Y-%m-%d'), i))
-        
-        #self.sh.saveYoutubeDocs(keyword, uids, videos)
-        print(docs)
-        return docs
-        '''
+       
     def youtube_comments_crawling(self, document):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--headless')

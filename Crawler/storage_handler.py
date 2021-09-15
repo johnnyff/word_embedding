@@ -35,8 +35,9 @@ class StorageHandler :
     def saveHygallDoc(self,target, document): self.fh.saveDoc(self.fh.hygall_dir,target,document)
     def saveRankingNews(self,target,document): self.fh.saveDoc(self.fh.RankingNews_dir, target, document)
     def saveRankingNewsURL(self,target,document): self.fh.saveURL(self.fh.RankingNews_dir, target, document)
-    def saveInstaDoc(self,target, document): self.fh.saveDoc(self.fh.insta_dir,target,document)
-    def saveInstaURL(self,target,document): self.fh.saveURL(self.fh.insta_dir,target,document)
+    # def saveInstaDoc(self,target, document): self.fh.saveDoc(self.fh.insta_dir,target,document)
+    # def saveInstaURL(self,target,document): self.fh.saveURL(self.fh.insta_dir,target,document)
+    def saveInsta(self,target, document): self.fh.saveDoc(self.fh.insta_dir,target,document)
 
     def saveFacebookDoc(self,target, document): self.fh.saveDoc(self.fh.facebook_dir,target,document)
     def saveNavercafeDoc(self,target, document): self.fh.saveDoc(self.fh.navercafe_dir,target,document)
