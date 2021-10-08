@@ -47,6 +47,14 @@ class FileHandler:
     def saveDoc(self, dir, target, document, columns=[['URL','Title','Date Time','Author','Contents']]):
         if os.path.isfile(self.reformPath(dir,target)) :
             self.addCSVLine(dir, target, document)
+    
+        else :
+            self.writeCSVLines(dir, target, [document], columns)
+            print("Added")
+## On processiong
+    def saveDoc2(self, dir, target, document, columns=[['URL','Title','Date Time','Author','Contents']]):
+        if os.path.isfile(self.reformPath(dir,target)) :
+            self.addCSVLine(dir, target, document)
         else :
             self.writeCSVLines(dir, target, [document], columns)
 

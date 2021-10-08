@@ -50,7 +50,7 @@ class MultiCrawler :
         
  #       print ('"'+keyword+'" documents '+str(len(documents))+' crawling start from facebook.')
  #       self.distributeList(p_cnt,'facebook',keyword,documents,crawler.facebook_docs_crawling)
-    def multiCrawlingInstaDumper(self,keyword, p_cnt = 2):
+    def multiCrawlingInstaDumper(self,keyword, p_cnt = 2):  
         crawler = CrawlingHandler()# 클래스 변수 생성
         print('"'+keyword+'" list crawling start from insta_dumper.')
         print(p_cnt) #argument로 16을 받아서 16으로 출력됨

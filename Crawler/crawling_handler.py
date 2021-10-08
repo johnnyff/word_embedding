@@ -144,7 +144,7 @@ class CrawlingHandler :
         split = contents.split('\n')
         contents = ' '
         for temp in split:
-            contents += temp.strip()+'\n'
+            contents += temp.strip()
         contents = re.sub('^[\n]+|[\n]+$', '', contents)
         contents = re.sub('([ ]?[\n][ ]?){2,}', '\n\n', contents)
 
@@ -257,6 +257,7 @@ class CrawlingHandler :
             
         except:
             return document
+        contents+= '/t'
         document[2] = time
         document += [author,contents]
 
@@ -319,7 +320,7 @@ class CrawlingHandler :
                         continue
                     else:
                         had_url.append(url)
-                    title = a.text
+                    title = a.text+'/t'
                     docs.append([url,title])
                 if len(lis) <10:
                     break
@@ -455,13 +456,16 @@ class CrawlingHandler :
                     text = p.find("span").text
                     
                     comment+=text
+                    comment += "/t"
                 except:
                     print("error on span")
                     while_flag = False
                     break
             page+=1
         contents = self.parseContents(comment)
+        print("before document : ", document)
         document+=[time,author,contents]
+        # document +=[contents]
         driver.close()
         return document # [url,title,time,author,contents]
     def daum_docs_crawling(self, process, keyword, docs):
@@ -635,7 +639,7 @@ class CrawlingHandler :
                 try:
                     tit = driver.find_element_by_css_selector('div.pcol1>div>p>span').text
                     #SE-e0358fba-3cb0-4ec8-b005-f3909edd0366 > div > div
-                    title = self.parseContents(tit)
+                    title = self.parseContents(tit)+'/t'
                     #print(title)
                 except Exception as e:
                     pass
@@ -652,7 +656,7 @@ class CrawlingHandler :
                 except Exception as e:
                     pass
                 try:
-                    text = driver.find_element_by_css_selector('div.se-main-container').text.replace('\n', ' ')
+                    text = driver.find_element_by_css_selector('div.se-main-container').text.replace('\n', '/t')
                 except Exception as e:
                     pass
             except:
@@ -1235,14 +1239,14 @@ class CrawlingHandler :
                         date = t_div.find("span",{"class":"date"}).text.replace('.','-')
                         title = t_div.find("div",{"class":"title_area"}).find("h3").text
                         title = title.replace("\n", ' ')
-                        title = self.parseContents(title)
+                        title = self.parseContents(title)+'/t'
                         
                     except:
                         driver.back()
                         continue
              
                     try:
-                        text = soup.select_one('#app > div > div > div.ArticleContentBox > div.article_container > div.article_viewer > div > div').text
+                        text = soup.select_one('#app > div > div > div.ArticleContentBox > div.article_container > div.article_viewer > div > div').text +'/t'
             
                     except Exception as e:
                         pass
@@ -1258,7 +1262,7 @@ class CrawlingHandler :
                         
                         #print(len(lis))
                         for li in lis:
-                            comment = comment + ' ' + li.find("div",{"class":"comment_text_box"}).text
+                            comment = comment + li.find("div",{"class":"comment_text_box"}).text+'/t'
                             #print(comment)
                         return_list = [url,title,date,author,self.parseContents(text+comment)]
                     except Exception as e:
@@ -1534,7 +1538,7 @@ class CrawlingHandler :
                 element = WebDriverWait(driver,1).until(
                 EC.presence_of_element_located((By.XPATH,'//*[@id="articleBodyContents"]')))
                 contents = driver.find_element_by_xpath('//*[@id="articleBodyContents"]').text
-                contents = contents.replace('\n', ' ').replace('#', ' ')
+                contents = contents.replace('\n', '/t').replace('#', ' ')
                 # print(contents)
             except Exception as e:
                 pass
@@ -1543,14 +1547,14 @@ class CrawlingHandler :
                 for li in lis:
                     comment = li.select_one('div > div > div.u_cbox_text_wrap > span').text
                     comment = comment.replace('\n', ' ').replace('#', ' ')
-                    contents = contents + ' ' + comment
+                    contents = contents + ' ' + comment+'/t'
             except:
                 pass
             try:
                 element = WebDriverWait(driver,1).until(
                 EC.presence_of_element_located((By.XPATH,'//*[@id="articleTitle"]')))
                 title = driver.find_element_by_xpath('//*[@id="articleTitle"]').text
-                title = title.replace('\n', ' ').replace('#', ' ')
+                title = title.replace('\n', ' ').replace('#', ' ')+'/t'
             except:
                 pass
             try:
@@ -1588,7 +1592,6 @@ class CrawlingHandler :
 
 
 
-
     def instagram_crawler(self, keyword):
         query = self.quote(keyword)
         docs = []
@@ -1616,7 +1619,7 @@ class CrawlingHandler :
             pass
 
         try :
-            element = WebDriverWait(driver,1).until(
+            element = WebDriverWait(driver,10).until(
                 EC.presence_of_element_located((By.XPATH,'/html/body/div[6]/div/div/div/div[3]/button[2]')))
             element.click()
         except:
@@ -1645,8 +1648,8 @@ class CrawlingHandler :
         check_arrow = True 
 
         while True:
-            if(count_extract %50 ==0):
-                time.sleep(2)
+            if(count_extract %30 ==0):
+                time.sleep(random.randint(0,10))
             upload_ids = [] 
             date_times = [] 
             date_titles = [] 
@@ -1655,7 +1658,7 @@ class CrawlingHandler :
           
             if count_extract > wish_num: 
                 break 
-            time.sleep(1.0+random.random()) # 
+            time.sleep(3.0+random.random()) # 
             if check_arrow == False: 
                 break 
                 
@@ -1663,7 +1666,7 @@ class CrawlingHandler :
             try: 
                 date_object = driver.find_element_by_css_selector(date_object_css) 
                 date_time = date_object.get_attribute("datetime") 
-                date_title = date_object.get_attribute("title") 
+                date_title = date_object.get_attribute("title") +'/t'
             except: 
                 date_time = None 
                 date_title = None 
@@ -1671,7 +1674,7 @@ class CrawlingHandler :
             # 본문 
             try: 
                 main_text_object = driver.find_element_by_css_selector(main_text_object_css) 
-                main_text = main_text_object.text 
+                main_text = main_text_object.text +'/t'
             except: main_text = None 
 
             # 댓글
@@ -1691,7 +1694,7 @@ class CrawlingHandler :
                 comment_texts_objects = driver.find_elements_by_css_selector(comment_texts_objects_css) 
                 try: 
                     for i in range(len(comment_texts_objects)): 
-                        comment_data += comment_texts_objects[i].text
+                        comment_data += comment_texts_objects[i].text +'/t'
                 except: 
                     print("fail") 
             except: 
@@ -1714,7 +1717,7 @@ class CrawlingHandler :
 
             try:
                 
-                return_list = [date_time,main_text, comment_data]
+                return_list = ["url_info",date_time,main_text,"none",comment_data]
                 self.sh.saveInsta(keyword, return_list)
             except Exception as e:
                 pass
@@ -1722,63 +1725,6 @@ class CrawlingHandler :
             count_extract += 1
 
 
-
-          # login complete
-#     def insta_dumper_comment_crawling(self,keyword):
-#         chrome_options = webdriver.ChromeOptions()      
-#         chrome_options.add_argument('--headless')
-#         chrome_options.add_argument('--no-sandbox')
-#         chrome_options.add_argument('--disable-dev-shm-usage')
-#         chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
-#         chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
-#         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
-#         try:
-#             had_url = self.sh.loadURL('insta',keyword+'_URL')
-#         except Exception as e:
-#             print(e)
-#             pass
-#         try:
-#             had_url += self.sh.loadURL('insta',keyword+'2'+'_URL')
-#         except Exception as e:
-#             print(e)
-#             pass
-#         try:
-#             had_url += self.sh.loadURL('insta',keyword+'3'+'_URL')
-#         except Exception as e:
-#             print(e)
-#             pass
-#         try:
-#             had_url += self.sh.loadURL('insta',keyword+'4'+'_URL')
-#         except Exception as e:
-#             print(e)
-#             pass
-
-#         print("Instagram dumpor Documents crawling start. documents count : "+str(len(had_url)))
-# #       soup = BeautifulSoup(response.text,"lxml")
-#         page_cnt = 0
-#         for _url in had_url:
-#             if _url in had_finished:
-#                 continue
-#             document = [_url]
-#             error_url =['https://www.instagram.com/p/CJF2GUYh7jy/','https://www.instagram.com/p/CLsqPm9jmKG/','https://www.instagram.com/p/CK_muQ9jOTW/','https://www.instagram.com/p/CK_mkErDgGD/','https://www.instagram.com/p/CK_mFVrHLyb/','https://www.instagram.com/p/CK_lcMFjDEK/','https://www.instagram.com/p/CK_lr2HHWZq/','https://www.instagram.com/p/CK_lb05nraJ/','https://www.instagram.com/p/CJw4w75no4o/','https://www.instagram.com/p/CJvcYkEBbiv/','https://www.instagram.com/p/CJi4IsAHX7S/','https://www.instagram.com/p/CJXmGtOjKzb/','https://www.instagram.com/p/CLMkUf5lpfS/','https://www.instagram.com/p/CK-yahyHrj9/','https://www.instagram.com/p/CK-yahyHrj9/','https://www.instagram.com/p/CLYBAlxjbVR/','https://www.instagram.com/p/CLQ1W6yMv8X/','https://www.instagram.com/p/CLEnHjnh0na/','']
-#             if document[0] in error_url:
-#                 continue
-#             try:
-#                 driver.get(document[0])
-#                 page_cnt += 1
-#                 time.sleep(5)
-#                 response = driver.page_source
-#                 #driver.page_source: 브라우저에 보이는 그대로의 HTML, 크롬 개발자 도구의 Element 탭 내용과 동일.
-#                 if not response: continue
-#                 soup = BeautifulSoup(response,'lxml')
-#                 #soup = BeautifulSoup(response,'lxml')
-#                 # title = self.parseContents(soup.find("title").text)
-#                 # doc[1] += title
-#                 contents =message =  comments =author = date = ''
-#             except Exception as e:
-#                 pass
-
-#         return
     def insta_dumper_list_crawling(self,keyword):
         try:
             had_url = self.sh.loadURL('insta',keyword)
@@ -2369,6 +2315,7 @@ class CrawlingHandler :
 
             #else:
 #                print('Error occur from insta site : '+doc[0])
+
     def tistory_list_crawling(self, keyword):
         page = 1
         docs = []
@@ -2403,7 +2350,7 @@ class CrawlingHandler :
                     print("a error")
                 url = a[0]['href']
                 #print(url)
-                title = a[0].text
+                title = a[0].text+'/t'
                 #print(title)
                 if url == prev_url:
                     flag = False
@@ -2437,140 +2384,140 @@ class CrawlingHandler :
         try:
             ps = soup.select('div.tt_article_useless_p_margin > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('div.entry-content > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('div.article > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             divs = soup.select('#content > article > div.article > div')
             for div in divs:
-                contents += self.parseContents(div.text)
+                contents += self.parseContents(div.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content > article > div:nth-child(4) > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#mArticle > div > div.area_view > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#container > main > div > div.area-view > div.article-view > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select_one('#mArticle > div > div.area_view').select('p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content > article > div > div.e-content.post-content.fouc > div')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#mArticle > div.area_view > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content_permallink_article > div > div > div.box_article > div > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content > div.inner > div.entry-content > div.tt_article_useless_p_margin')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#__permalink_article > div.article.content__permalink > article > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content > div.inner > div.entry-content')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content > div.entry > div.entrayContentsWrap > div.article > div')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content_permallink_article > div > div > div.box_article > div')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content > div.inner > div.entry-content > div:nth-child(3) > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#body > div.article > div:nth-child(1) > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#main > div > div.category_list.index_type_common.index_type_horizontal > ul > li > div > div > div.article_view > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#content_permallink_article > div > div > div.box_article > div > div')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
@@ -2578,35 +2525,35 @@ class CrawlingHandler :
         try:
             ps = soup.select('#content > div.inner > div.entry-content > div')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#tt-body-page > div.jb-page.jb-hide-menu-icon.jb-typography-3 > div.jb-background.jb-background-main > div > div > div.jb-column.jb-column-content > div.jb-cell.jb-cell-content.jb-cell-content-article > article > div.jb-content.jb-content-article > div.jb-article > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#article > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#tt-body-page > div.jb-page.jb-youtube-auto.jb-typography-3.jb-post-title-show-line.jb-another-category-1 > div.jb-background.jb-background-main > div > div > div.jb-column.jb-column-content > div.jb-cell.jb-cell-content.jb-cell-content-article > article > div.jb-content.jb-content-article > div.jb-article > div > div > p')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
         try:
             ps = soup.select('#mArticle > div.area_view > div > div')
             for p in ps:
-                contents += self.parseContents(p.text)
+                contents += self.parseContents(p.text)+'/t'
             #print(contents)
         except Exception as e:
             pass
@@ -2743,6 +2690,7 @@ class CrawlingHandler :
             date = self.parseContents(date)
         except Exception as e:
             pass
+        
         if len(contents) == 0: return document
         document += [date, author, contents]
         #print(document)
@@ -2796,7 +2744,7 @@ class CrawlingHandler :
                     continue
                 a = tr.find("td",{"class":"title"}).find("a")
                 url = a['href']
-                title = a.text
+                title = a.text+'/t'
                 if url in had_url or title in had_title: continue
                 had_url.append(url)
                 had_title.append(title)
@@ -2816,7 +2764,7 @@ class CrawlingHandler :
         except Exception as e:
             time_line = "none"
         try:
-            contents = self.parseContents(soup.find("div",{"class":"cntBody"}).find("div").text)
+            contents = self.parseContents(soup.find("div",{"class":"cntBody"}).find("div").text)+'/t'
         except Exception as e:
             return document
         try:
@@ -2829,7 +2777,7 @@ class CrawlingHandler :
         try:
             for div in divs:
                 comment = div.find("div",{"class":"repCnt"}).find("div").text
-                contents += self.parseContents(comment +'.')
+                contents += self.parseContents(comment +'.')+'/t'
         except Exception as e:
             pass
         #contents = contents_limit(contents)
@@ -2905,7 +2853,7 @@ class CrawlingHandler :
                 for li in lis:
                     a = li.find("p",{"class":"title"}).find("a")
                     url = 'http://slrclub.com'+a['href']
-                    title = a.text
+                    title = a.text+'/t'
                     if url in had_url or title in had_title: continue
                     docs.append([url,title])
                     had_url.append(url)
@@ -2970,6 +2918,7 @@ class CrawlingHandler :
             driver.find_element_by_xpath('//*[@id="comment_pgc"]/img[2]').click()
         except:
             pass
+        contents += '/t'
         time.sleep(1)
         response = driver.page_source
         if not response: return document
@@ -2978,7 +2927,8 @@ class CrawlingHandler :
             divs = soup.find_all("div",{"class":"cmt-contents"})
             for div in divs:
                 comment = self.parseContents(div.text)
-                contents += comment +'.'
+                comment += '/t'
+                # contents += comment +'.'
             document += [time_line,author,contents]
         except Exception as e:
             #contents = contents_limit(contents)
@@ -3029,7 +2979,7 @@ class CrawlingHandler :
             for li in lis:
                 b = li.find_all("a")
                 url = b[0]['href']
-                title = b[0].text
+                title = b[0].text+'/t'
                 if url in had_url: continue
                 docs.append([url,title])
                 had_url.append(url)
@@ -3053,7 +3003,8 @@ class CrawlingHandler :
             author = 'none'
         
         try:
-            contents = soup.find("div",{"class":"container"}).text
+            contents = soup.find("div",{"class":"container"}).text +'/t'
+            
         except:
             return document
         try:
@@ -3065,7 +3016,7 @@ class CrawlingHandler :
             return document
         for tr in trs:
             try:
-                comment += tr.find("td",{"class":"comment"}).text+'\n'
+                comment += self.parseContents(tr.find("td",{"class":"comment"}).text) +'/t'
             except:
                 pass
         contents+=comment
@@ -3123,7 +3074,7 @@ class CrawlingHandler :
                 
                 a = li.find("a")
                 url = a['href']
-                title = a.text
+                title = a.text +'/t'
                 try:
                     time_line = li.find("span",{"class":"f_date date"}).text.replace('.','-')
                 except:
@@ -3144,15 +3095,15 @@ class CrawlingHandler :
         comment = ' '
         try:
             author = self.parseContents(soup.find("span",{"class":"hu_nick_txt"}).text)
-            contents = self.parseContents(soup.find("span",{"id":"ai_cm_content"}).text)
+            contents = self.parseContents(soup.find("span",{"id":"ai_cm_content"}).text)+'/t'
             try:
                 tr = soup.find_all("tr",{"id":re.compile(r'comment_span_[0-9]+')})
                 for com in tr:
-                    comment += com.find("td",{"width":"380"}).find("span",{"class":"cmt_list"}).text +' '
+                    comment += com.find("td",{"width":"380"}).find("span",{"class":"cmt_list"}).text +'/t'
                 comment = self.parseContents(comment)
                 #contents = contents_limit(contents+comment)
                 contents+=comment
-                document+= [author,contents+comment]
+                # document+= [author,contents+comment]
             except Exception as e:
                 print(e)
                 pass
@@ -3202,7 +3153,7 @@ class CrawlingHandler :
             for li in lis:
                 a = li.find("a",{"class":"f_url"})
                 url = a['href']
-                title = a.text
+                title = a.text+'/t'
                 if url in had_url: continue
                 docs.append([url,title])
                 had_url.append(url)
@@ -3223,11 +3174,11 @@ class CrawlingHandler :
             time_line =self.parseContents(td.find("span",{"class":"mw_basic_view_datetime"}).text.replace(".","-"))
             author = self.parseContents(td.find("span",{"class":"member"}).text)
             td = soup.find("td",{"class":"mw_basic_view_content"})
-            contents = self.parseContents(td.find("div").text)
+            contents = self.parseContents(td.find("div").text)+'/t'
             try:
                 table = soup.find_all("table",{"class":"mw_basic_comment_content"})
                 for td in table:
-                    comment += td.text+'\n'
+                    comment += td.text+'/t'
                 #contents = contents_limit(contents+comment)
                 contents+=comment
                 document += [time_line,author,contents]
@@ -3277,7 +3228,7 @@ class CrawlingHandler :
             for li in lis:
                 a = li.find("a")
                 url = a['href']
-                title = a.text
+                title = a.text+'/t'
                 if url in had_url: continue
                 docs.append([url,title])
                 had_url.append(url)
@@ -3311,12 +3262,12 @@ class CrawlingHandler :
             btm_area = soup.find("div",{"class":"btm_area clear"})
             time_line = self.parseContents(btm_area.find("div",{"class":"side fr"}).text.replace(".","-"))
             author = self.parseContents(btm_area.find("div",{"class":"side"}).text)
-            contents = self.parseContents(soup.find("article",{"itemprop":"articleBody"}).text)
+            contents = self.parseContents(soup.find("article",{"itemprop":"articleBody"}).text)+'/t'
             try:
                 lis = soup.find("ul",{"class":"fdb_lst_ul"}).find_all("li")
                 for li in lis:
                     div = li.find_all("div")
-                    comments += div[1].text+'\n'
+                    comments += (div[1].text).strip()+'/t'
                 #contents = contents_limit(contents+comments)
                 contents+=comments
                 document += [time_line,author,contents+comments]
@@ -3378,7 +3329,7 @@ class CrawlingHandler :
             for li in lis:
                 a = li.find("a")
                 url = 'https://www.fmkorea.com'+a['href']
-                title = a.text
+                title = a.text+'/t'
                 if url in had_url: continue
                 docs.append([url,title])
                 had_url.append(url)
@@ -3396,7 +3347,7 @@ class CrawlingHandler :
         try:
             time_line =self.parseContents(soup.find("div",{"class":"top_area ngeb"}).find("span").text.replace(".","-"))
             author = self.parseContents(soup.find("div",{"class":"btm_area clear"}).find("div",{"class":"side"}).find("a").text)
-            contents = self.parseContents(soup.find("article").text)
+            contents = self.parseContents(soup.find("article").text)+'/t'
             document += [time_line,author,contents]
         except Exception as e:
             return document
@@ -3573,7 +3524,7 @@ class CrawlingHandler :
                 a = li.find("a",{"class":"subject"})
                 url = 'https://pann.nate.com'+a['href']
                 if url in had_url : continue
-                title = a.text
+                title = a.text+'/t'
                 docs.append([url,title])
                 had_url.append(url)
             page+=1
@@ -3594,7 +3545,7 @@ class CrawlingHandler :
                 a = li.find("a",{"class":"subject"})
                 url = 'https://pann.nate.com'+a['href']
                 if url in had_url : continue
-                title = a.text
+                title = a.text+'/t'
                 docs.append([url,title])
             page+=1
         #팬톡 clear
@@ -3626,13 +3577,13 @@ class CrawlingHandler :
             return document
         page=1
         author = self.parseContents(author)
-        contents = self.parseContents(contents+comments)
+        contents = self.parseContents(contents+comments)+'/t'
         while True:
             response = driver.page_source
             try:
                 cmt_list = soup.find("div",{"class":"cmt_list"}).find_all("dl")
                 for cmt in cmt_list:
-                    comments+= cmt.find("dd",{"class":"usertxt"}).find("span").text +'\n'
+                    comments+= cmt.find("dd",{"class":"usertxt"}).find("span").text +'/t'
             except Exception as e:
                 #contents = contents_limit(contents+comments)
                 contents+=comments
@@ -3667,7 +3618,9 @@ class CrawlingHandler :
         urls=[]
         page =1
         query = self.quote(keyword)
+        
         chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
@@ -3707,7 +3660,7 @@ class CrawlingHandler :
                 flag = False
                 a = item.find("a")
                 url = a['href']
-                title = a.text
+                title = a.text+'/t'
                 driver.get(url)
                 try:
                     rs = driver.page_source
@@ -3785,7 +3738,7 @@ class CrawlingHandler :
                             author = li.find("span",{"class":"info"}).find_all("span",{"class":"info_cell"})[1].text
                             content = self.parseContents(content)
                             author = self.parseContents(author)
-                            contents += content +'.'
+                            contents += content +'/t'
                             authors += author + '.'
                         except Exception as e:
                             if len(contents)<=1:
@@ -3893,7 +3846,7 @@ class CrawlingHandler :
                 url = li.find("a",{"class":"tit_txt"})["href"]
                 if url in had_url: continue
                 date_line = li.find("span",{"class":"date_time"}).text.replace(".","-")
-                title = li.find("a",{"class":"tit_txt"}).text
+                title = li.find("a",{"class":"tit_txt"}).text+'/t'
                 docs.append([url, title, date_line])
                 had_url.append(url)
             page += 1
@@ -3926,15 +3879,11 @@ class CrawlingHandler :
             try:
                 for i in range(1,16):
                     try:
-                        li = driver.find_element_by_xpath('//*[@id="board_search"]/div/ul/li['+str(i)+']/div/div[2]/a[1]')
-                    except:
-                        pass
-                    try:
-                        li = driver.find_element_by_xpath('//*[@id="board_search"]/div/ul/li['+str(i)+']/div/div/a[1]')
+                        li = driver.find_element_by_css_selector('#board_search > div > ul > li:nth-child('+str(i)+') > div > div > a.title.text_over')
                     except:
                         pass                    
                     url = li.get_attribute('href')
-                    title = li.text
+                    title = li.text+'/t'
                     # print(url)
                     # print(title)
                     if url in had_url: continue
@@ -3944,6 +3893,7 @@ class CrawlingHandler :
             except Exception as e:
                 flag = False
                 pass
+            page+=1
             # try:
             #     for li in lis:
             #         a = li.select('div > div[1] > a')
@@ -3985,307 +3935,9 @@ class CrawlingHandler :
             #     print('??')
             #     pass
 
-            page+=1
             if flag == False:
                 break
         return docs
-    def mlbpark_list_crawling(self, keyword) :
-        page = 1
-        docs = []
-        query = self.quote(keyword)
-        had_url = self.sh.loadURL('mlbpark',keyword)
-        while True :
-            search_url = 'http://mlbpark.donga.com/mp/b.php?p='+str(page)+'&m=search&b=bullpen&query='+query+'&select=sct&user='
-            response = self.getResponse(search_url)
-            # print(search_url)
-            if not response: break
-            soup = BeautifulSoup(response.text, "lxml")
-            #sys.stdout.write(search_url)
-            try:
-                now_page = (int(soup.find("div", {"class":"page"}).find("strong").text)-1)*30+1
-            except Exception as e: break
-            if not page == now_page: break
-#            print ('"'+keyword+'" list is crawling page '+str(page)+' from Mlbpark.')
-            table = soup.find("table", {"class":"tbl_type01"}).find("tbody").find_all("tr")
-            for tr in table :
-                a = tr.select("td.t_left > div.tit > a")
-                # print(a)
-                url = a[0]["href"]
-                # print(url)
-                if url in had_url: continue
-                title = self.parseContents(a[0].text)
-                docs.append([url, title])
-                had_url.append(url)
-            page += 30
-
-        return docs
-    def inven_list_crawling(self, keyword) :
-        page = 1
-        docs = []
-        query = self.quote(keyword)
-        had_url = self.sh.loadURL('inven',keyword)
-        while True :
-#            search_url = 'http://www.inven.co.kr/webzine/news/?sw='+query+'&sclass=0&page='+str(page)
-            search_url = 'http://m.inven.co.kr/search/webzine/article/'+query+'/'+str(page)
-            response = self.getResponse(search_url)
-            if not response: break
-            #sys.stdout.write(search_url)
-            soup = BeautifulSoup(response.text, "lxml")
-
-            now_page = int(soup.find("span", {"class":"currentpg pg"}).text)
-            if not page == now_page: break
-            #print ('"'+keyword+'" list is crawling page '+str(page)+' from Inven.')
-            try:
-#                table = soup.find("div", {"class":"webzineNewsList tableType2"}).find("table").find("tbody").find_all("tr")
-                table = soup.find("div",{"class":"sectin_body"}).find("ul").find_all("li")
-            except Exception as e: break
-            for tr in table :
-#                a = tr.find("td",{"class":"left name"}).find("span",{"class":"title"}).find("a")
-                a = tr.find("a",{"class":"name ellipsis"})
-                url = a["href"]
-                if url in had_url: continue
-                title = a.text
-#                if title.find("]") > 0:
-#                    title = title[title.find("]")+2:]
-#                info = tr.find("span",{"class":"info"}).text.split("|")
-#                author = info[1][1:]
-#                date_line = info[2][1:]
-                info = tr.find("div",{"class":"item_info clearfix"})
-                author = info.find("a",{"class":"board"}).text
-                date_line = info.find("p",{"class":"date"}).text
-                docs.append([url, title, date_line, author])
-                had_url.append(url)
-            page += 1
-
-        return docs
-    def todayhumor_list_crawling(self, keyword) :
-        page = 1
-        docs = []
-        query = self.quote(keyword)
-        had_url = self.sh.loadURL('todayhumor',keyword)
-        while True :
-            search_url = 'http://www.todayhumor.co.kr/board/list.php?table=&page='+str(page)+'&kind=search&keyfield=subject&keyword='+query
-            response = self.getResponse(search_url)
-            if not response: break
-            #sys.stdout.write(search_url)
-            soup = BeautifulSoup(response.text, "lxml")
-            
-            try:
-                table = soup.find("table", {"class":"table_list"}).find_all("tr",{"class":re.compile(r"view list_tr_[a-z]+")})
-            except Exception as e: 
-                
-                break
-            if not table or len(table) < 1: 
-                
-                break
-#            print ('"'+keyword+'" list is crawling page '+str(page)+' from Todayhumor.')
-            for tr in table :
-                a = tr.find("td",{"class":"subject"}).find("a")
-                url = 'http://www.todayhumor.co.kr'+a["href"]
-                if url in had_url: continue
-                title = a.text
-                author = tr.find("td",{"class":"name"}).text
-                date_line = "20"+tr.find("td",{"class":"date"}).text.replace("/","-")
-                docs.append([url, title, date_line, author])
-                had_url.append(url)
-            page += 1
-            print(page)
-        return docs
-    def ppomppu_list_crawling(self, keyword) :
-        page = 1
-        docs = []
-        query = self.quote(keyword)
-        had_url = self.sh.loadURL('ppomppu',keyword)
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
-        driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
-        end_flag = 0
-        while True : 
-            search_url = 'http://www.ppomppu.co.kr/search_bbs.php?search_type=sub_memo&page_no='+str(page)+'&keyword='+query+'&page_size=50&bbs_id=&order_type=date&bbs_cate=2'
-            try:
-                driver.get(search_url)
-                time.sleep(1)
-            except Exception as e:
-                print(search_url)
-                print(e)
-                continue
-            for cnt in range(1,51):
-                try:
-                    conts = driver.find_element_by_xpath('/html/body/div/div[2]/div[5]/div/form/div/div['+str(cnt)+']/div/span/a')                    
-                except Exception as e: 
-                    end_flag = 1
-                    break
-                #print ('"'+keyword+'" list is crawling page '+str(page)+' from Ppomppu.')
-                try:
-                    url = conts.get_attribute('href')
-                    # print(url)
-                    if not url : continue
-                except Exception as e: 
-                    print(e)
-                    continue
-                if url in had_url: continue
-                title = conts.text
-                # print(title)
-                docs.append([url, title])
-                had_url.append(url)
-                #####################
-            if end_flag ==1:
-                break
-            page += 1
-            # print(page)
-        return docs
-    
-    def ppomppu_doc_crawling(self, document) :
-        
-        response = self.getResponse(document[0])
-        if not response: return document
-        soup = BeautifulSoup(response.text, "lxml")
-        comment ='\n'
-        contents=""
-        try:
-            contents = soup.find("td",{"class":"board-contents"}).text
-            contents = self.parseContents(contents)
-            #date_line = date_line[date_line.find(u'등록일: ')+len(u'등록일: '):date_line.find(u'조회수')].replace('\r','').replace('\n','')
-        except Exception as e:
-            contents = document[0]
-        try:
-            author = soup.find("font",{"class":"view_name"}).text
-        except:
-            author = "none"
-        try:
-            t = soup.find("div",{"class":"sub-top-text-box"}).text
-        except:
-            t = "none"
-        document += [t,author,contents]
-        
-        return document
-
-    def clien_list_crawling(self, keyword) :
-        page = 0
-        docs = []
-        query = self.quote(keyword)
-        had_url = self.sh.loadURL('clien',keyword)
-        while True :
-            search_url = 'https://www.clien.net/service/search?q='+query+'&sort=recency&p='+str(page)+'&boardCd=&isBoard=false'
-            response = self.getResponse(search_url)
-            if not response: break
-            #sys.stdout.write(search_url)
-            soup = BeautifulSoup(response.text, "lxml")
-
-            try:
-                now_page = int(soup.find("div", {"class":"board-pagination"}).find("a", {"class":"board-nav-page active"}).text)
-            except Exception as e: break
-#            print ('"'+keyword+'" list is crawling page '+str(page+1)+' from Clien.')
-            if not page == now_page-1: break
-            list = soup.find("div", {"class":"contents_jirum"}).find_all("div", {"data-role":"list-row"})
-            for row in list :
-                a = row.find("a",{"data-role":"list-title-text"})
-#                url =a["href"]
-                url = 'https://www.clien.net'+ a["href"]
-                if url in had_url: continue
-                title = re.sub(r'^[\n\t ]+|[\n\t ]+$', '', a.text.replace('\t',''))
-                date_line = re.sub(r'^[\n\t ]+|[\n\t ]+$', '', row.find("span",{"class":"timestamp"}).text)
-                docs.append([url, title, date_line])
-                had_url.append(url)
-            page += 1
-
-        return docs
-    def instiz_list_crawling(self, keyword) :
-        page =1
-        docs = []
-        temp = 'site:https://instiz.net '+keyword
-        query = self.quote(temp)
-        had_url = self.sh.loadURL('instiz',keyword)
-        flag = True
-        temp = ""
-        while True:
-            search_url = 'https://search.daum.net/search?w=web&q='+query+'&DA=PGD&detail_query='+self.quote(keyword)+'&p='+str(page)
-            response = self.getResponse(search_url)
-            if not response: break
-            #sys.stdout.write(search_url)
-            soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
-            lis = soup.find("ul",{"class":"list_info clear"}).find_all("li")
-#            print ('"'+keyword+'" list is crawling page '+str(page)+' from instiz.')
-            if temp == lis[0].find("a")['href']: break
-            else: temp = lis[0].find("a")['href']
-            for li in lis:
-                a = li.find("a")
-                url = a['href']
-                title = a.text
-                if url in had_url: continue
-                docs.append([url,title])
-                had_url.append(url)
-            page+=1
-        return docs
-
-    def cook82_list_crawling(self, keyword):
-        page = 1
-        docs = []
-        query = self.quote(keyword)
-        had_url = self.sh.loadURL('cook82',keyword)
-        while True :
-            search_url = 'http://www.82cook.com/entiz/enti.php?bn=15&searchType=search&search1=1&keys='+query+'&page='+str(page)
-            response = self.getResponse(search_url)
-            if not response: break
-            #sys.stdout.write(search_url)
-            soup = BeautifulSoup(response.text, "lxml")
-
-            try:
-                list = soup.find("div", {"id":"list_table"}).find("table").find("tbody").find_all("tr",)
-            except Exception as e: 
-                print(e)
-                print(search_url)
-                break
-            if not list or len(list[0].find_all("td")) < 2: break
-#            print ('"'+keyword+'" list is crawling page '+str(page)+' from 82Cook.')
-            for row in list :
-                try:
-                    a = row.find("td",{"class":"title"}).find("a")
-                except:
-                    continue
-                url = "http://www.82cook.com/entiz/"+a["href"]
-                if url in had_url: continue
-                title = re.sub(r'^[\n\t ]+|[\n\t ]+$', '', a.text.replace('\t',''))
-                date_line = re.sub(r'^[\n\t ]+|[\n\t ]+$', '', str(row.find("td",{"class":"regdate numbers"}).text))
-                docs.append([url, title, date_line])
-                had_url.append(url)
-            page += 1
-
-        return docs
-    
-    # crawling document
-    def dcinside_doc_crawling(self, document) :
-        
-        author = 'none';contents =''
-        response = self.getResponse(document[0])
-        if not response: document += [author,document[1]];return document
-        soup = BeautifulSoup(response.text, "lxml")
-        comments = ''+document[1]
-        try:
-            author = soup.find("span", {"class":"nickname"}).text
-        except:
-            author = "none"
-        try:
-            contents = soup.find("div",{"class":"writing_view_box"}).text
-        except Exception as e:
-            document +=[author,comments]
-            return document
-        author = self.parseContents(author)
-        contents = self.parseContents(contents)
-        try:
-            lis= soup.find("ul",{"class":"cmt_list"}).find_all("li",{"class":"ub-content"})
-            for li in lis:
-                comments += li.find("p",{"class":"usertxt ub-word"}).text +'\n'
-        except Exception as e: #댓글 없는 경우
-            pass
-        contents += self.parseContents(comments)
-        #contents = contents_limimt(contents)
-        document +=[author,contents]
-        return document
-    
     def ruliweb_doc_crawling(self, document) :
         
         response = self.getResponse(document[0])
@@ -4309,7 +3961,7 @@ class CrawlingHandler :
         except:
             time_line = '0000.00.00'
         try:
-            contents = soup.find("div",{"class":"board_main"}).find("div",{"class":"view_content"}).find("div").text
+            contents = soup.find("div",{"class":"board_main"}).find("div",{"class":"view_content"}).find("div").text+'/t'
 
         except Exception as e:
             return document  # 본문 없을경우
@@ -4317,10 +3969,11 @@ class CrawlingHandler :
             cmt_list = soup.find("table",{"class":"comment_table"}).find("tbody").find_all("tr")
             for cmt in cmt_list:
                 comment = cmt.find("td",{"class":"comment"}).find("div",{"class":"text_wrapper"}).find("span",{"class":"text"}).text
-                comments+=comment+'\n'
+                comment = self.parseContents(comment)
+                comments+=comment+'/t'
         except Exception as e:
             author = self.parseContents(author)
-            contents = self.parseContents(contents)
+            # contents = self.parseContents(contents)
             document +=[time_line,author,contents]
             return document   # 댓글이 없는 경우
         author = self.parseContents(author)
@@ -4398,6 +4051,36 @@ class CrawlingHandler :
         return document
         """
 
+    def mlbpark_list_crawling(self, keyword) :
+        page = 1
+        docs = []
+        query = self.quote(keyword)
+        had_url = self.sh.loadURL('mlbpark',keyword)
+        while True :
+            search_url = 'http://mlbpark.donga.com/mp/b.php?p='+str(page)+'&m=search&b=bullpen&query='+query+'&select=sct&user='
+            response = self.getResponse(search_url)
+            # print(search_url)
+            if not response: break
+            soup = BeautifulSoup(response.text, "lxml")
+            #sys.stdout.write(search_url)
+            try:
+                now_page = (int(soup.find("div", {"class":"page"}).find("strong").text)-1)*30+1
+            except Exception as e: break
+            if not page == now_page: break
+#            print ('"'+keyword+'" list is crawling page '+str(page)+' from Mlbpark.')
+            table = soup.find("table", {"class":"tbl_type01"}).find("tbody").find_all("tr")
+            for tr in table :
+                a = tr.select("td.t_left > div.tit > a")
+                # print(a)
+                url = a[0]["href"]
+                # print(url)
+                if url in had_url: continue
+                title = self.parseContents(a[0].text)+'/t'
+                docs.append([url, title])
+                had_url.append(url)
+            page += 30
+
+        return docs
 
     def mlbpark_doc_crawling(self, document) :
         
@@ -4411,17 +4094,17 @@ class CrawlingHandler :
             contents = soup.find("div",{"id":"contentDetail"}).text
             date_line = self.parseContents(date_line)
             author = self.parseContents(author)
-            contents = self.parseContents(contents)
+            contents = self.parseContents(contents)+'/t'
             try:
                 reply_list = soup.find("div",{"class":"index"}).find("div",{"id":"container"}).find("div",{"class":"contents"}).find("div",{"class":"left_cont"}).find("div",{"class":"reply_list"})
                 other_cons = reply_list.find_all("div",{"class":"other_con"})
                 my_cons = reply_list.find_all("div",{"class":"my_con"})
                 for other_con in other_cons:
                     text = other_con.find("div",{"class":"other_reply"}).find("div",{"class":"txt_box"}).find("div").find("span",{"class":"re_txt"}).text
-                    comment+=text+'\n'
+                    comment+=text.strip()+'/t'
                 for my_con in my_cons:
                     text = my_con.find("div",{"class":"my_reply"}).find("div",{"class":"txt_box"}).find("div").find("span",{"class":"re_txt"}).text
-                    comment+=text+'\n'
+                    comment+=text.strip()+'/t'
                 document += [date_line,author,contents+self.parseContents(comment)]
             except Exception as e:
                 document += [date_line,author,contents]
@@ -4429,6 +4112,48 @@ class CrawlingHandler :
             return document
 
         return document
+
+    def inven_list_crawling(self, keyword) :
+        page = 1
+        docs = []
+        query = self.quote(keyword)
+        had_url = self.sh.loadURL('inven',keyword)
+        while True :
+#            search_url = 'http://www.inven.co.kr/webzine/news/?sw='+query+'&sclass=0&page='+str(page)
+            search_url = 'http://m.inven.co.kr/search/webzine/article/'+query+'/'+str(page)
+            response = self.getResponse(search_url)
+            if not response: break
+            #sys.stdout.write(search_url)
+            soup = BeautifulSoup(response.text, "lxml")
+
+            now_page = int(soup.find("span", {"class":"currentpg pg"}).text)
+            if not page == now_page: break
+            #print ('"'+keyword+'" list is crawling page '+str(page)+' from Inven.')
+            try:
+#                table = soup.find("div", {"class":"webzineNewsList tableType2"}).find("table").find("tbody").find_all("tr")
+                table = soup.find("div",{"class":"sectin_body"}).find("ul").find_all("li")
+            except Exception as e: break
+            for tr in table :
+#                a = tr.find("td",{"class":"left name"}).find("span",{"class":"title"}).find("a")
+                a = tr.find("a",{"class":"name ellipsis"})
+                url = a["href"]
+                if url in had_url: continue
+                title = a.text+'/t'
+#                if title.find("]") > 0:
+#                    title = title[title.find("]")+2:]
+#                info = tr.find("span",{"class":"info"}).text.split("|")
+#                author = info[1][1:]
+#                date_line = info[2][1:]
+                info = tr.find("div",{"class":"item_info clearfix"})
+                author = info.find("a",{"class":"board"}).text
+                date_line = info.find("p",{"class":"date"}).text
+                docs.append([url, title, date_line, author])
+                had_url.append(url)
+            page += 1
+
+        return docs
+
+    
     def inven_doc_crawling(self, document) :
         
         response = self.getResponse(document[0])
@@ -4436,19 +4161,55 @@ class CrawlingHandler :
         soup = BeautifulSoup(response.text, "lxml")
         comment = '\n'
         try:
-            contents = soup.find("div",{"id":"imageCollectDiv"}).text
+            contents = soup.find("div",{"id":"imageCollectDiv"}).text.strip()+'/t'
             try:
                 lis = soup.find("div",{"id":"powerbbsCmt2"}).find("div",{"class":"cmtWrap"}).find("div",{"class":"cmtMain"}).find("div",{"class":"commentList1"}).find("ul").find_all("li")
                 for li in lis:
                     text = li.find("div",{"class":"cmtOne cmtSt2"}).find("div",{"class":"comment"}).text
-                    comment += text+'\n'
-                document.append(self.parseContents(contents+comment))
+                    comment += self.parseContents(text)+'/t'
+                document.append(contents+comment)
             except Exception as e:
-                document.append(self.parseContents(contents))
+                document.append(self.parseContents(contents))+'/t'
         except Exception as e:
             return document
 
         return document
+
+    def todayhumor_list_crawling(self, keyword) :
+        page = 1
+        docs = []
+        query = self.quote(keyword)
+        had_url = self.sh.loadURL('todayhumor',keyword)
+        while True :
+            search_url = 'http://www.todayhumor.co.kr/board/list.php?table=&page='+str(page)+'&kind=search&keyfield=subject&keyword='+query
+            response = self.getResponse(search_url)
+            if not response: break
+            #sys.stdout.write(search_url)
+            soup = BeautifulSoup(response.text, "lxml")
+            
+            try:
+                table = soup.find("table", {"class":"table_list"}).find_all("tr",{"class":re.compile(r"view list_tr_[a-z]+")})
+            except Exception as e: 
+                
+                break
+            if not table or len(table) < 1: 
+                
+                break
+#            print ('"'+keyword+'" list is crawling page '+str(page)+' from Todayhumor.')
+            for tr in table :
+                a = tr.find("td",{"class":"subject"}).find("a")
+                url = 'http://www.todayhumor.co.kr'+a["href"]
+                if url in had_url: continue
+                title = a.text+'/t'
+                author = tr.find("td",{"class":"name"}).text
+                date_line = "20"+tr.find("td",{"class":"date"}).text.replace("/","-")
+                docs.append([url, title, date_line, author])
+                had_url.append(url)
+            page += 1
+            print(page)
+        return docs
+
+    
     def todayhumor_doc_crawling(self, document) :
         
         response = self.getResponse(document[0])
@@ -4456,21 +4217,124 @@ class CrawlingHandler :
         soup = BeautifulSoup(response.text, "lxml")
         comments='\n'
         try:
-            contents = soup.find("div",{"class":"viewContent"}).text
+            contents = soup.find("div",{"class":"viewContent"}).text.strip()+'/t'
             memoDiv = soup.find_all("div",{"class":"memoDiv"})
             memowrapper = soup.find_all("div",{"class":"memoWrapperDiv rereMemoWrapperDiv"})
             for memo in memoDiv:
-                comments += memo.find("div",{"class":"memoContent"}).text +'\n'
+                comments += self.parseContents(memo.find("div",{"class":"memoContent"}).text).strip() +'/t'
             for memo in memowrapper:
-                comments += memo.find("div",{"class":"memoDiv rereMemoDiv"}).find("div",{"class":"memoContent"}).text+'\n'
+                comments += self.parseContents(memo.find("div",{"class":"memoDiv rereMemoDiv"}).find("div",{"class":"memoContent"}).text).strip()+'/t'
         except Exception as e:
             pass
 #            return document
-        contents = self.parseContents(contents + comments)
+        contents += comments
         document.append(contents)
 
         return document
     
+
+    def ppomppu_list_crawling(self, keyword) :
+        page = 1
+        docs = []
+        query = self.quote(keyword)
+        had_url = self.sh.loadURL('ppomppu',keyword)
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
+        driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
+        end_flag = 0
+        while True : 
+            search_url = 'http://www.ppomppu.co.kr/search_bbs.php?search_type=sub_memo&page_no='+str(page)+'&keyword='+query+'&page_size=50&bbs_id=&order_type=date&bbs_cate=2'
+            try:
+                driver.get(search_url)
+                time.sleep(1)
+            except Exception as e:
+                print(search_url)
+                print(e)
+                continue
+            for cnt in range(1,51):
+                try:
+                    conts = driver.find_element_by_xpath('/html/body/div/div[2]/div[5]/div/form/div/div['+str(cnt)+']/div/span/a')                    
+                except Exception as e: 
+                    end_flag = 1
+                    break
+                #print ('"'+keyword+'" list is crawling page '+str(page)+' from Ppomppu.')
+                try:
+                    url = conts.get_attribute('href')
+                    # print(url)
+                    if not url : continue
+                except Exception as e: 
+                    print(e)
+                    continue
+                if url in had_url: continue
+                title = conts.text+'/t'
+                # print(title)
+                docs.append([url, title])
+                had_url.append(url)
+                #####################
+            if end_flag ==1:
+                break
+            page += 1
+            # print(page)
+        return docs
+    
+    def ppomppu_doc_crawling(self, document) :
+        
+        response = self.getResponse(document[0])
+        if not response: return document
+        soup = BeautifulSoup(response.text, "lxml")
+        comment ='\n'
+        contents=""
+        try:
+            contents = soup.find("td",{"class":"board-contents"}).text
+            contents = self.parseContents(contents)+'/t'
+            #date_line = date_line[date_line.find(u'등록일: ')+len(u'등록일: '):date_line.find(u'조회수')].replace('\r','').replace('\n','')
+        except Exception as e:
+            contents = ""
+        try:
+            author = soup.find("font",{"class":"view_name"}).text
+        except:
+            author = "none"
+        try:
+            t = soup.find("div",{"class":"sub-top-text-box"}).text
+        except:
+            t = "none"
+        document += [t,author,contents]
+        
+        return document
+
+    def clien_list_crawling(self, keyword) :
+        page = 0
+        docs = []
+        query = self.quote(keyword)
+        had_url = self.sh.loadURL('clien',keyword)
+        while True :
+            search_url = 'https://www.clien.net/service/search?q='+query+'&sort=recency&p='+str(page)+'&boardCd=&isBoard=false'
+            response = self.getResponse(search_url)
+            if not response: break
+            #sys.stdout.write(search_url)
+            soup = BeautifulSoup(response.text, "lxml")
+
+            try:
+                now_page = int(soup.find("div", {"class":"board-pagination"}).find("a", {"class":"board-nav-page active"}).text)
+            except Exception as e: break
+#            print ('"'+keyword+'" list is crawling page '+str(page+1)+' from Clien.')
+            if not page == now_page-1: break
+            list = soup.find("div", {"class":"contents_jirum"}).find_all("div", {"data-role":"list-row"})
+            for row in list :
+                a = row.find("a",{"data-role":"list-title-text"})
+#                url =a["href"]
+                url = 'https://www.clien.net'+ a["href"]
+                if url in had_url: continue
+                title = re.sub(r'^[\n\t ]+|[\n\t ]+$', '', a.text.replace('\t',''))+'/t'
+                date_line = re.sub(r'^[\n\t ]+|[\n\t ]+$', '', row.find("span",{"class":"timestamp"}).text)
+                docs.append([url, title, date_line])
+                had_url.append(url)
+            page += 1
+
+        return docs
 
     def clien_doc_crawling(self, document) :
         
@@ -4489,16 +4353,45 @@ class CrawlingHandler :
             for comment_content in comment_row:
                 try:
                     comment = comment_content.find("div",{"class":"comment_content"}).find("div",{"class":"comment_view"}).text
-                    comments += comment+'\n'
+                    comments += self.parseContents(comment)+'/t'
                 except:
                     pass
         except Exception as e:
             return document
         author = self.parseContents(author)
-        contents = self.parseContents(contents)
-        comments = self.parseContents(comments)
+        contents = self.parseContents(contents)+'/t'
         document += [author, contents+comments]
         return document
+
+    def instiz_list_crawling(self, keyword) :
+        page =1
+        docs = []
+        temp = 'site:https://instiz.net '+keyword
+        query = self.quote(temp)
+        had_url = self.sh.loadURL('instiz',keyword)
+        flag = True
+        temp = ""
+        while True:
+            search_url = 'https://search.daum.net/search?w=web&q='+query+'&DA=PGD&detail_query='+self.quote(keyword)+'&p='+str(page)
+            response = self.getResponse(search_url)
+            if not response: break
+            #sys.stdout.write(search_url)
+            soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
+            lis = soup.find("ul",{"class":"list_info clear"}).find_all("li")
+#            print ('"'+keyword+'" list is crawling page '+str(page)+' from instiz.')
+            if temp == lis[0].find("a")['href']: break
+            else: temp = lis[0].find("a")['href']
+            for li in lis:
+                a = li.find("a")
+                url = a['href']
+                title = a.text+'/t'
+                if url in had_url: continue
+                docs.append([url,title])
+                had_url.append(url)
+            page+=1
+        return docs
+
+    
     def instiz_doc_crawling(self, document) :
         
         response = self.getResponse(document[0])
@@ -4513,7 +4406,7 @@ class CrawlingHandler :
 
         try:            
             contents = soup.find("div",{"id":"memo_content_1"}).text
-            contents = self.parseContents(contents)
+            contents = self.parseContents(contents)+'/t'
         except Exception as e:
             contents = ""
         try:
@@ -4521,8 +4414,8 @@ class CrawlingHandler :
             j = trs.find_all("tr")
             for tr in j:
                 try:
-                    text = tr.find("td",{"class":"comment_memo"}).find("div",{"comment_line"}).find("span").text
-                    comment += text+'\n'
+                    text = self.parseContents(tr.find("td",{"class":"comment_memo"}).find("div",{"comment_line"}).find("span").text).strip()
+                    comment += text+'/t'
                 except Exception as e:
                     break
             documents += [date_line, author, contents + self.parseContents(comment)]
@@ -4534,6 +4427,72 @@ class CrawlingHandler :
                 return document
 
         return document
+
+    def cook82_list_crawling(self, keyword):
+        page = 1
+        docs = []
+        query = self.quote(keyword)
+        had_url = self.sh.loadURL('cook82',keyword)
+        while True :
+            search_url = 'http://www.82cook.com/entiz/enti.php?bn=15&searchType=search&search1=1&keys='+query+'&page='+str(page)
+            response = self.getResponse(search_url)
+            if not response: break
+            #sys.stdout.write(search_url)
+            soup = BeautifulSoup(response.text, "lxml")
+
+            try:
+                list = soup.find("div", {"id":"list_table"}).find("table").find("tbody").find_all("tr",)
+            except Exception as e: 
+                print(e)
+                print(search_url)
+                break
+            if not list or len(list[0].find_all("td")) < 2: break
+#            print ('"'+keyword+'" list is crawling page '+str(page)+' from 82Cook.')
+            for row in list :
+                try:
+                    a = row.find("td",{"class":"title"}).find("a")
+                except:
+                    continue
+                url = "http://www.82cook.com/entiz/"+a["href"]
+                if url in had_url: continue
+                title = re.sub(r'^[\n\t ]+|[\n\t ]+$', '', a.text.replace('\t',''))+'/t'
+                date_line = re.sub(r'^[\n\t ]+|[\n\t ]+$', '', str(row.find("td",{"class":"regdate numbers"}).text))
+                docs.append([url, title, date_line])
+                had_url.append(url)
+            page += 1
+
+        return docs
+    
+    # crawling document
+    def dcinside_doc_crawling(self, document) :
+        
+        author = 'none';contents =''
+        response = self.getResponse(document[0])
+        if not response: document += [author,document[1]];return document
+        soup = BeautifulSoup(response.text, "lxml")
+        comments = ''+document[1]
+        try:
+            author = soup.find("span", {"class":"nickname"}).text
+        except:
+            author = "none"
+        try:
+            contents = soup.find("div",{"class":"writing_view_box"}).text
+        except Exception as e:
+            document +=[author,comments]
+            return document
+        author = self.parseContents(author)
+        contents = self.parseContents(contents)+'/t'
+        try:
+            lis= soup.find("ul",{"class":"cmt_list"}).find_all("li",{"class":"ub-content"})
+            for li in lis:
+                comments += li.find("p",{"class":"usertxt ub-word"}).text +'/t'
+        except Exception as e: #댓글 없는 경우
+            pass
+        contents += self.parseContents(comments)
+        #contents = contents_limimt(contents)
+        document +=[author,contents]
+        return document
+     
     def cook82_doc_crawling(self, document) :
         
         response = self.getResponse(document[0])
@@ -4544,12 +4503,12 @@ class CrawlingHandler :
             author = soup.find("div", {"class":"readLeft"}).find("strong").text
             contents = soup.find("div",{"id":"articleBody"}).text
             author = self.parseContents(author)
-            contents = self.parseContents(contents)
+            contents = self.parseContents(contents).strip()+'/t'
             try:
                 lis = soup.find("ul",{"class":"reples"}).find_all("li")
                 for li in lis:
-                    comments += li.find("p").text+'\n'
-                contents = self.parseContents(contents+comments)
+                    comments += self.parseContents(li.find("p").text).strip()+'/t'
+                contents = contents+comments
                 document += [author,contents]
             except Exception as e:
                 document +=[author,contents]
@@ -4744,7 +4703,7 @@ class CrawlingHandler :
                     #print(video.select_one('yt-formatted-string').text)
                     if url in had_url: continue
                     try:
-                        title = video.select_one('yt-formatted-string').text
+                        title = video.select_one('yt-formatted-string').text+'/t'
                     except:
                         pass
                     #print(title)
@@ -4828,7 +4787,7 @@ class CrawlingHandler :
         try:
             replies = driver.find_elements_by_xpath('//*[@id="content-text"]')
             for reply in replies:
-                comment = reply.text
+                comments = reply.text.strip()+'/t'
             #print(comment)
         except Exception as e:
             print("No content-text")
@@ -4843,9 +4802,8 @@ class CrawlingHandler :
             print(e)
             pass
         for yt in ytds:
-            comment = yt.text
-            self.parseContents(comment)
-            comments += comment.replace('\n',' ')
+            comment = self.parseContents(yt.text).strip()
+            comments += comment+'/t'
         document += [date, author, comments]
         #print(document)
         driver.close()

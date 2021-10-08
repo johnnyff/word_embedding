@@ -41,7 +41,9 @@ class StorageHandler :
 
     def saveFacebookDoc(self,target, document): self.fh.saveDoc(self.fh.facebook_dir,target,document)
     def saveNavercafeDoc(self,target, document): self.fh.saveDoc(self.fh.navercafe_dir,target,document)
-    def saveDaumDoc(self,target, document): self.fh.saveDoc(self.fh.daum_dir,target,document)
+    def saveDaumDoc(self,target, document): 
+        print(document)
+        self.fh.saveDoc(self.fh.daum_dir,target,document)
     def saveNavernewsDoc(self,target, document): self.fh.saveDoc(self.fh.navernews_dir,target,document)
     def saveYoutubeDoc(self,target, document): self.fh.saveDoc(self.fh.youtube_dir,target,document)
     def saveNaverblogDoc(self,target, document): self.fh.saveDoc(self.fh.naverblog_dir,target,document)
