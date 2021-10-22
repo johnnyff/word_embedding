@@ -5,6 +5,7 @@
 from __future__ import print_function
 from sklearn.cluster import DBSCAN
 import re, sys
+import numpy as np
 
 from storage_handler import StorageHandler
 import time
@@ -12,6 +13,7 @@ import tensorflow_hub as hub
 import tensorflow as tf
 import os
 import warnings
+from tqdm import tqdm, trange
 
 import torch
 from pytorch_pretrained_bert import BertTokenizer, BertModel
@@ -21,6 +23,8 @@ from transformers import AutoModelForSequenceClassification
 from transformers import TrainingArguments
 from transformers import Trainer
 
+
+from vectorizer import Vectorizer
 
 
 from tokenization_kobert import KoBertTokenizer
@@ -243,6 +247,10 @@ def tokenize_function(examples):
     tokenizer = KoBertTokenizer.from_pretrained('monologg/kobert')
     return tokenizer(examples, padding="max_length", truncation=True)
 
+
+# def new_getBertScore(contents, keyworkd, num_of_words):
+
+
 def getBertScore(contents,keyword,  num_of_words):
     start_time = time.time()
     total = len(contents)
@@ -290,6 +298,7 @@ def getBertScore(contents,keyword,  num_of_words):
         indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
         segments_ids = [1] * len(tokenized_text)
         for num_1, word in enumerate(tokenized_text):
+            print(word)
             if num_1 == 0 | num_1 == len(tokenized_text)-1:
                 continue
             elif word in stop_list:
@@ -337,6 +346,7 @@ def getBertScore(contents,keyword,  num_of_words):
             if t[i] in senti_dict.keys():
                 # print(key_vec)
                 # print(outputs[0][i])
+                
                 temp = (key_vec-outputs[0][i])
                 if temp[0] == 0:
                     continue
@@ -387,6 +397,182 @@ def getBertScore(contents,keyword,  num_of_words):
     print("Vectorizing and calculating time : ",end='')
     print(time.time() - start_time,end='')
     print(" sec")
+    return result
+
+def bert_on_processing(contents, keyword, num_of_words):
+    start_time = time.time()
+    # Setting based on the current model type
+
+    tokenizer = KoBertTokenizer.from_pretrained('monologg/kobert')
+    batch_size = 1
+    
+
+    cls_token = tokenizer.cls_token
+    sep_token = tokenizer.sep_token
+    pad_token_id = tokenizer.pad_token_id
+    
+   
+    cls_token_segment_id=0
+    pad_token_segment_id=0
+    sequence_a_segment_id=0
+    mask_padding_with_zero=True
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    if not os.path.exists('./model'):
+        raise Exception("Model doesn't exists! Train first!")
+
+    try:
+        model = AutoModelForSequenceClassification.from_pretrained('./model')  # Config will be automatically loaded from model_dir
+        model.to(device)
+        model.eval()
+    except:
+        raise Exception("Some model files might be missing...")
+
+    file = open("./stopwords.txt", "r")
+    stop_list = file.read().split()
+
+    # Load Data
+    sh = StorageHandler()
+    senti_dict = sh.getSentiDictionary()
+    target = keyword
+    tokenizer = KoBertTokenizer.from_pretrained('monologg/kobert')
+    tokenized_contents =[]
+    max_seq_len = 50
+    cnt = 0
+    total_word = []
+    result = {}
+    sentence_based_positive = 0
+    sentence_based_negative = 0
+    total_sentence_cnt =0
+    positive_sentences = []
+    negative_sentences = []
+    for c in tqdm(contents):
+        for line in c.split('t'):
+            cnt+=1
+            line =line.strip()
+
+            tokens = tokenizer.tokenize(line)
+            special_tokens_count = 2
+            # Account for [CLS] and [SEP]
+            if len(tokens) > max_seq_len - special_tokens_count:
+                tokens = tokens[:max_seq_len-special_tokens_count]
+            
+            # Add [SEP] token
+            tokens += [sep_token]
+            token_type_ids = [sequence_a_segment_id] * len(tokens)
+
+            # Add [CLS] token
+            tokens = [cls_token] + tokens
+            token_type_ids = [cls_token_segment_id] + token_type_ids
+
+            input_ids = tokenizer.convert_tokens_to_ids(tokens)
+
+            # The mask has 1 for real tokens and 0 for padding tokens. Only real tokens are attended to.
+            attention_mask = [1 if mask_padding_with_zero else 0] * len(input_ids)
+
+            # Zero-pad up to the sequence length.
+            padding_length = max_seq_len - len(input_ids)
+            input_ids = input_ids + ([pad_token_id] * padding_length)
+            attention_mask = attention_mask + ([0 if mask_padding_with_zero else 1] * padding_length)
+            token_type_ids = token_type_ids + ([pad_token_segment_id] * padding_length)
+
+            input_ids = torch.tensor([input_ids], dtype=torch.long)
+            attention_mask = torch.tensor([attention_mask], dtype=torch.long)
+            token_type_ids = torch.tensor([token_type_ids], dtype=torch.long)
+
+
+            
+            output = model(input_ids.to(device), attention_mask.to(device))
+            logits = output[0]
+        
+            preds = logits.detach().cpu().numpy()
+            
+            if (np.argmax(preds))==1 :
+                sentence_based_positive+=1
+                positive_sentences.append(line)
+                
+            else :
+                sentence_based_negative +=1
+                negative_sentences.append(line)
+            
+            total_sentence_cnt +=1
+    print("positive : ", sentence_based_positive)
+    print("negative : ", sentence_based_negative)
+    print("total : ", total_sentence_cnt)
+    
+
+    p_score = {'total':0.0,'p':0.0,'n':0.0}
+    p_count = {'total':0,'p':0,'n':0}
+
+    n_score = {'total':0.0,'p':0.0,'n':0.0}
+    n_count = {'total':0,'p':0,'n':0}
+
+    vec = Vectorizer()
+    t_positive=[]
+    tokenized_positive = vec.tokenizing(positive_sentences)
+    one_per = int(len(tokenized_positive)/100)
+    total=len(tokenized_positive)
+    for num, temp in enumerate(tokenized_positive):
+        word_in_sentence = {}
+
+
+        for num_1, word in enumerate(temp):
+            if num_1 == 0 | num_1 == len(tokenized_positive)-1:
+                continue
+            elif word in stop_list:
+                continue
+            elif word in num_of_words.keys():
+                num_of_words[word]+=1
+            else:
+                num_of_words[word]= 1
+            t_positive.append(word)
+
+    ##(johnny : keyword vec 나중에 구현)
+
+    for i in range(0,len(t_positive)):
+        if t_positive[i] in senti_dict.keys():
+            # print(key_vec)
+            # print(outputs[0][i])
+            
+            senti_score = senti_dict[t_positive[i]]
+            if senti_score>0:
+                p_score['p'] += senti_score
+                p_count['p']+=1
+            else:
+                p_score['n'] += senti_score
+                p_count['n']+=1
+            p_score['total'] += senti_score
+            p_count['total']+=1
+            if t_positive[i] in word_in_sentence.keys():
+                word_in_sentence[t_positive[i]]['count']+=1
+            else:
+                word_in_sentence[t_positive[i]] = {'score': senti_dict[t_positive[i]], 'count':1}
+    for word in tqdm(t_positive):
+        if word in result.keys() and word not in stop_list:
+            score2 = p_score.copy(); count2 = p_count.copy()
+            result[word]['score']['p']+= score2['p']
+            result[word]['score']['n']+= score2['n']
+            result[word]['score']['total']+= score2['total']
+            result[word]['count']['p']+= count2['p']
+            result[word]['count']['n']+= count2['n']
+            result[word]['count']['total']+= count2['total']
+            # 현재 문장에서, 
+            
+            for w in word_in_sentence:
+                if w in result[word]['related'].keys():
+                    #cnt = int( word_in_sentence[w]['count'])
+                    result[word]['related'][w]['count'] += 1
+                else:
+                    result[word]['related'][w] = word_in_sentence[w].copy()
+        else:
+            score2 = p_score.copy(); count2 = p_count.copy()
+            word2 = word_in_sentence.copy()
+            result[word] = { 'score':{'total':score2['total'],'p':score2['p'],'n':score2['n']}, 'count':{'total':count2['total'],'p':count2['p'],'n':count2['n']} , 'related': word2  }
+        # if (one_per>0):
+        #     progressBarwith_time(num+1, total,start_time)
+    
+
     return result
 
 
