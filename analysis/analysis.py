@@ -399,7 +399,7 @@ def getBertScore(contents,keyword,  num_of_words):
     print(" sec")
     return result
 
-def bert_on_processing(contents, keyword, num_of_words):
+def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     start_time = time.time()
     # Setting based on the current model type
 
@@ -441,13 +441,32 @@ def bert_on_processing(contents, keyword, num_of_words):
     max_seq_len = 50
     cnt = 0
     total_word = []
-    result = {}
+    result_pos = {}
+    result_neg = {}
     sentence_based_positive = 0
     sentence_based_negative = 0
     total_sentence_cnt =0
     positive_sentences = []
     negative_sentences = []
+
+    kw = ['[CLS]' , keyword , '[SEP]']
+    print(kw)
+    kw_input_id = tokenizer.convert_tokens_to_ids(kw)
+    kw_padding_length = max_seq_len - len(kw_input_id)
+
+    kw_input_ids = kw_input_id + ([pad_token_id] * kw_padding_length)
+    kw_attention_mask = [1 if mask_padding_with_zero else 0] * len(kw_input_id)
+    kw_attention_mask = kw_attention_mask + ([0 if mask_padding_with_zero else 1] * kw_padding_length)
+
+    kw_input_tensor = torch.tensor([kw_input_ids])
+    kw_attention_tensor = torch.tensor([kw_attention_mask])
+
+
+    kw_output = model(kw_input_tensor.to(device), kw_attention_tensor.to(device))
+    kw_vec = kw_output[0]
+
     for c in tqdm(contents):
+
         for line in c.split('t'):
             cnt+=1
             line =line.strip()
@@ -482,8 +501,10 @@ def bert_on_processing(contents, keyword, num_of_words):
             token_type_ids = torch.tensor([token_type_ids], dtype=torch.long)
 
 
-            
+          
             output = model(input_ids.to(device), attention_mask.to(device))
+           
+
             logits = output[0]
         
             preds = logits.detach().cpu().numpy()
@@ -509,71 +530,131 @@ def bert_on_processing(contents, keyword, num_of_words):
     n_count = {'total':0,'p':0,'n':0}
 
     vec = Vectorizer()
-    t_positive=[]
+    ## positive_sentences_analysis
     tokenized_positive = vec.tokenizing(positive_sentences)
     one_per = int(len(tokenized_positive)/100)
     total=len(tokenized_positive)
-    for num, temp in enumerate(tokenized_positive):
+    for num, temp in tqdm(enumerate(tokenized_positive)):
         word_in_sentence = {}
-
+        t_positive=[]
 
         for num_1, word in enumerate(temp):
             if num_1 == 0 | num_1 == len(tokenized_positive)-1:
                 continue
             elif word in stop_list:
                 continue
-            elif word in num_of_words.keys():
-                num_of_words[word]+=1
+            elif word in num_of_words_pos.keys():
+                num_of_words_pos[word]+=1
             else:
-                num_of_words[word]= 1
+                num_of_words_pos[word]= 1
             t_positive.append(word)
 
     ##(johnny : keyword vec 나중에 구현)
 
-    for i in range(0,len(t_positive)):
-        if t_positive[i] in senti_dict.keys():
-            # print(key_vec)
-            # print(outputs[0][i])
-            
-            senti_score = senti_dict[t_positive[i]]
-            if senti_score>0:
-                p_score['p'] += senti_score
-                p_count['p']+=1
-            else:
-                p_score['n'] += senti_score
-                p_count['n']+=1
-            p_score['total'] += senti_score
-            p_count['total']+=1
-            if t_positive[i] in word_in_sentence.keys():
-                word_in_sentence[t_positive[i]]['count']+=1
-            else:
-                word_in_sentence[t_positive[i]] = {'score': senti_dict[t_positive[i]], 'count':1}
-    for word in tqdm(t_positive):
-        if word in result.keys() and word not in stop_list:
-            score2 = p_score.copy(); count2 = p_count.copy()
-            result[word]['score']['p']+= score2['p']
-            result[word]['score']['n']+= score2['n']
-            result[word]['score']['total']+= score2['total']
-            result[word]['count']['p']+= count2['p']
-            result[word]['count']['n']+= count2['n']
-            result[word]['count']['total']+= count2['total']
-            # 현재 문장에서, 
-            
-            for w in word_in_sentence:
-                if w in result[word]['related'].keys():
-                    #cnt = int( word_in_sentence[w]['count'])
-                    result[word]['related'][w]['count'] += 1
+        for i in range(0,len(t_positive)):
+            if t_positive[i] in senti_dict.keys():
+                # print(key_vec)
+                # print(outputs[0][i])
+                
+                senti_score = senti_dict[t_positive[i]]
+                if senti_score>0:
+                    p_score['p'] += senti_score
+                    p_count['p']+=1
                 else:
-                    result[word]['related'][w] = word_in_sentence[w].copy()
-        else:
-            score2 = p_score.copy(); count2 = p_count.copy()
-            word2 = word_in_sentence.copy()
-            result[word] = { 'score':{'total':score2['total'],'p':score2['p'],'n':score2['n']}, 'count':{'total':count2['total'],'p':count2['p'],'n':count2['n']} , 'related': word2  }
+                    p_score['n'] += senti_score
+                    p_count['n']+=1
+                p_score['total'] += senti_score
+                p_count['total']+=1
+                if t_positive[i] in word_in_sentence.keys():
+                    word_in_sentence[t_positive[i]]['count']+=1
+                else:
+                    word_in_sentence[t_positive[i]] = {'score': senti_dict[t_positive[i]], 'count':1}
+        for word in t_positive:
+            if word in result_pos.keys() and word not in stop_list:
+                score2 = p_score.copy(); count2 = p_count.copy()
+                result_pos[word]['score']['p']+= score2['p']
+                result_pos[word]['score']['n']+= score2['n']
+                result_pos[word]['score']['total']+= score2['total']
+                result_pos[word]['count']['p']+= count2['p']
+                result_pos[word]['count']['n']+= count2['n']
+                result_pos[word]['count']['total']+= count2['total']
+                # 현재 문장에서, 
+                
+                for w in word_in_sentence:
+                    if w in result_pos[word]['related'].keys():
+                        #cnt = int( word_in_sentence[w]['count'])
+                        result_pos[word]['related'][w]['count'] += 1
+                    else:
+                        result_pos[word]['related'][w] = word_in_sentence[w].copy()
+            else:
+                score2 = p_score.copy(); count2 = p_count.copy()
+                word2 = word_in_sentence.copy()
+                result_pos[word] = { 'score':{'total':score2['total'],'p':score2['p'],'n':score2['n']}, 'count':{'total':count2['total'],'p':count2['p'],'n':count2['n']} , 'related': word2  }
         # if (one_per>0):
         #     progressBarwith_time(num+1, total,start_time)
     
+    ##negative_sentence_analysis
+    tokenized_negative = vec.tokenizing(negative_sentences)
+    one_per = int(len(tokenized_negative)/100)
+    total=len(tokenized_negative)
+    for num, temp in tqdm(enumerate(tokenized_negative)):
+        word_in_sentence = {}
+        t_negative=[]
 
-    return result
+        for num_1, word in enumerate(temp):
+            if num_1 == 0 | num_1 == len(tokenized_negative)-1:
+                continue
+            elif word in stop_list:
+                continue
+            elif word in num_of_words_neg.keys():
+                num_of_words_neg[word]+=1
+            else:
+                num_of_words_neg[word]= 1
+            t_negative.append(word)
+
+    ##(johnny : keyword vec 나중에 구현)
+
+        for i in range(0,len(t_negative)):
+            if t_negative[i] in senti_dict.keys():
+                # print(key_vec)
+                # print(outputs[0][i])
+                
+                senti_score = senti_dict[t_negative[i]]
+                if senti_score>0:
+                    n_score['p'] += senti_score
+                    n_count['p']+=1
+                else:
+                    n_score['n'] += senti_score
+                    n_count['n']+=1
+                n_score['total'] += senti_score
+                n_count['total']+=1
+                if t_negative[i] in word_in_sentence.keys():
+                    word_in_sentence[t_negative[i]]['count']+=1
+                else:
+                    word_in_sentence[t_negative[i]] = {'score': senti_dict[t_negative[i]], 'count':1}
+        for word in t_negative:
+            if word in result_neg.keys() and word not in stop_list:
+                score3 = n_score.copy(); count3 = n_count.copy()
+                result_neg[word]['score']['p']+= score3['p']
+                result_neg[word]['score']['n']+= score3['n']
+                result_neg[word]['score']['total']+= score3['total']
+                result_neg[word]['count']['p']+= count3['p']
+                result_neg[word]['count']['n']+= count3['n']
+                result_neg[word]['count']['total']+= count3['total']
+                # 현재 문장에서, 
+                
+                for w in word_in_sentence:
+                    if w in result_neg[word]['related'].keys():
+                        #cnt = int( word_in_sentence[w]['count'])
+                        result_neg[word]['related'][w]['count'] += 1
+                    else:
+                        result_neg[word]['related'][w] = word_in_sentence[w].copy()
+            else:
+                score3 = n_score.copy(); count3 = n_count.copy()
+                word3 = word_in_sentence.copy()
+                result_neg[word] = { 'score':{'total':score3['total'],'p':score3['p'],'n':score3['n']}, 'count':{'total':count3['total'],'p':count3['p'],'n':count3['n']} , 'related': word3  }
+
+    return result_pos, result_neg
 
 
 

@@ -43,11 +43,13 @@ if __name__ == '__main__':
             print("Save time : "+ str(save_time_end-save_time_start)+"sec")
 
         elif sys.argv[1] == 'bert2':
-            num_of_words = {}
-            result = analysis.bert_on_processing(contents,target,num_of_words)
+            num_of_words_pos = {}
+            num_of_words_neg = {}
+            result1, result2 = analysis.bert_on_processing(contents,target,num_of_words_pos, num_of_words_neg)
             result_time = time.time()-start
             save_time_start = time.time()
-            sh.saveElmoWords(result, num_of_words,file=target)
+            sh.saveElmoWords(result1, num_of_words_pos,file=target)
+            sh.saveElmoWords(result2, num_of_words_neg,file=target)
             save_time_end = time.time()
             now = time.localtime()
             print("End time : ",end='')
