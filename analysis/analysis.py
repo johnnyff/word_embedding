@@ -25,7 +25,7 @@ from transformers import Trainer
 
 
 from vectorizer import Vectorizer
-
+from konlpy.tag import Mecab
 
 from tokenization_kobert import KoBertTokenizer
 from kobert_tokenizer import KoBERTTokenizer
@@ -531,15 +531,23 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
 
     vec = Vectorizer()
     ## positive_sentences_analysis
-    tokenized_positive = vec.tokenizing(positive_sentences)
-    one_per = int(len(tokenized_positive)/100)
-    total=len(tokenized_positive)
-    for num, temp in tqdm(enumerate(tokenized_positive)):
+    # tokenized_positive = vec.tokenizing(positive_sentences)
+    # one_per = int(len(tokenized_positive)/100)
+    # total=len(tokenized_positive)
+    # print("toeknized_psitive :" , tokenized_positive)
+    mecab = Mecab()
+    for i, st in tqdm(enumerate(positive_sentences)):
+    # for num, temp in tqdm(enumerate(tokenized_positive)):
+        print("st : ", st)
         word_in_sentence = {}
         t_positive=[]
-
-        for num_1, word in enumerate(temp):
-            if num_1 == 0 | num_1 == len(tokenized_positive)-1:
+        for num_1, (word,po) in enumerate(mecab.pos(st)):
+            
+            if po not in ['NNG','NNP','NNB','NR','NP',"VV",'VX','VCP','VCN',"XR",'SL']:
+                continue
+            if (po in ['NNG','NNP','NNB','NR','NP']) and len(word)==1 :
+                continue
+            if num_1 == 0 :
                 continue
             elif word in stop_list:
                 continue
@@ -547,8 +555,10 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 num_of_words_pos[word]+=1
             else:
                 num_of_words_pos[word]= 1
-            t_positive.append(word)
+            print(word,po)
 
+            t_positive.append(word)
+      
     ##(johnny : keyword vec 나중에 구현)
 
         for i in range(0,len(t_positive)):
@@ -592,7 +602,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 result_pos[word] = { 'score':{'total':score2['total'],'p':score2['p'],'n':score2['n']}, 'count':{'total':count2['total'],'p':count2['p'],'n':count2['n']} , 'related': word2  }
         # if (one_per>0):
         #     progressBarwith_time(num+1, total,start_time)
-    
+        
     ##negative_sentence_analysis
     tokenized_negative = vec.tokenizing(negative_sentences)
     one_per = int(len(tokenized_negative)/100)
