@@ -538,7 +538,6 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     mecab = Mecab()
     for i, st in tqdm(enumerate(positive_sentences)):
     # for num, temp in tqdm(enumerate(tokenized_positive)):
-        print("st : ", st)
         word_in_sentence = {}
         t_positive=[]
         for num_1, (word,po) in enumerate(mecab.pos(st)):
@@ -555,7 +554,6 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 num_of_words_pos[word]+=1
             else:
                 num_of_words_pos[word]= 1
-            print(word,po)
 
             t_positive.append(word)
       
@@ -604,15 +602,20 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
         #     progressBarwith_time(num+1, total,start_time)
         
     ##negative_sentence_analysis
-    tokenized_negative = vec.tokenizing(negative_sentences)
-    one_per = int(len(tokenized_negative)/100)
-    total=len(tokenized_negative)
-    for num, temp in tqdm(enumerate(tokenized_negative)):
+    # tokenized_negative = vec.tokenizing(negative_sentences)
+    # one_per = int(len(tokenized_negative)/100)
+    # total=len(tokenized_negative)
+    for i, st in tqdm(enumerate(negative_sentences)):
         word_in_sentence = {}
         t_negative=[]
 
-        for num_1, word in enumerate(temp):
-            if num_1 == 0 | num_1 == len(tokenized_negative)-1:
+        for num_1, (word,po) in enumerate(mecab.pos(st)):
+
+            if po not in ['NNG','NNP','NNB','NR','NP',"VV",'VX','VCP','VCN',"XR",'SL']:
+                continue
+            if (po in ['NNG','NNP','NNB','NR','NP']) and len(word)==1 :
+                continue
+            if num_1 == 0 :
                 continue
             elif word in stop_list:
                 continue
@@ -620,7 +623,9 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 num_of_words_neg[word]+=1
             else:
                 num_of_words_neg[word]= 1
+
             t_negative.append(word)
+
 
     ##(johnny : keyword vec 나중에 구현)
 
