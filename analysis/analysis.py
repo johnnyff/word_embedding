@@ -26,9 +26,15 @@ from transformers import Trainer
 
 from vectorizer import Vectorizer
 from konlpy.tag import Mecab
+from sklearn.metrics.pairwise import cosine_similarity
 
 from tokenization_kobert import KoBertTokenizer
 from kobert_tokenizer import KoBERTTokenizer
+
+from kobert.utils import get_tokenizer
+from kobert.pytorch_kobert import get_pytorch_kobert_model
+from sklearn.metrics.pairwise import cosine_similarity
+
 import logging
 warnings.filterwarnings(action='ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
@@ -401,12 +407,9 @@ def getBertScore(contents,keyword,  num_of_words):
 
 def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     start_time = time.time()
-    # Setting based on the current model type
-
+    # Setting based on the current model type 
     tokenizer = KoBertTokenizer.from_pretrained('monologg/kobert')
     batch_size = 1
-    
-
     cls_token = tokenizer.cls_token
     sep_token = tokenizer.sep_token
     pad_token_id = tokenizer.pad_token_id
@@ -431,6 +434,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
 
     file = open("./stopwords.txt", "r")
     stop_list = file.read().split()
+    mecab = Mecab()
 
     # Load Data
     sh = StorageHandler()
@@ -466,7 +470,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     kw_vec = kw_output[0]
 
     for c in tqdm(contents):
-
+        print(c)
         for line in c.split('t'):
             cnt+=1
             line =line.strip()
@@ -536,16 +540,36 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     # total=len(tokenized_positive)
     # print("toeknized_psitive :" , tokenized_positive)
     mecab = Mecab()
+    bertmodel, vocab = get_pytorch_kobert_model()
+    bertmodel.to(device)
+    
+    #키워드 1글자
+    
+    kw_token_type_ids = [sequence_a_segment_id] * 1
+    kw_input_ids = tokenizer.convert_tokens_to_ids([keyword])
+    kw_attention_mask = [1 if mask_padding_with_zero else 0] * 1
+
+
+    kw_input_ids = torch.tensor([kw_input_ids], dtype=torch.long).to(device)
+    kw_attention_mask = torch.tensor([kw_attention_mask], dtype=torch.long).to(device)
+    kw_token_type_ids = torch.tensor([kw_token_type_ids], dtype=torch.long).to(device)
+    
+
+    kw_vector, _ = bertmodel(kw_input_ids, kw_attention_mask, kw_token_type_ids)
+    kw_vector = kw_vector.squeeze().detach().cpu().numpy().reshape(1,-1)
+
+
+
     for i, st in tqdm(enumerate(positive_sentences)):
     # for num, temp in tqdm(enumerate(tokenized_positive)):
         word_in_sentence = {}
         t_positive=[]
         for num_1, (word,po) in enumerate(mecab.pos(st)):
             
-            if po not in ['NNG','NNP','NNB','NR','NP',"VV",'VX','VCP','VCN',"XR",'SL']:
-                continue
-            if (po in ['NNG','NNP','NNB','NR','NP']) and len(word)==1 :
-                continue
+            # if po not in ['NNG','NNP','NNB','NR','NP',"VV",'VX','VCP','VCN',"XR",'SL']:
+            #     continue
+            # if (po in ['NNG','NNP','NNB','NR','NP']) and len(word)==1 :
+            #     continue
             if num_1 == 0 :
                 continue
             elif word in stop_list:
@@ -556,22 +580,41 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 num_of_words_pos[word]= 1
 
             t_positive.append(word)
-      
+
+        if len(t_positive) > max_seq_len - special_tokens_count:
+            t_positive = t_positive[:max_seq_len-special_tokens_count]
+        if len(t_positive)==0 or len(t_positive)==1:
+            continue
+        token_type_ids = [sequence_a_segment_id] * len(t_positive)
+        input_ids = tokenizer.convert_tokens_to_ids(t_positive)
+        attention_mask = [1 if mask_padding_with_zero else 0] * len(t_positive)
+
+    
+        input_ids = torch.tensor([input_ids], dtype=torch.long).to(device)
+        attention_mask = torch.tensor([attention_mask], dtype=torch.long).to(device)
+        token_type_ids = torch.tensor([token_type_ids], dtype=torch.long).to(device)
+        output1, _= bertmodel(input_ids, attention_mask, token_type_ids)
+
+        output1 = output1.squeeze()
+        print("output 1: ",output1.size())
+        output1 = output1.detach().cpu().numpy()
+
     ##(johnny : keyword vec 나중에 구현)
 
         for i in range(0,len(t_positive)):
             if t_positive[i] in senti_dict.keys():
+                cosine_sim = cosine_similarity(output1[i].reshape(1,-1),kw_vector)
                 # print(key_vec)
                 # print(outputs[0][i])
                 
                 senti_score = senti_dict[t_positive[i]]
                 if senti_score>0:
-                    p_score['p'] += senti_score
+                    p_score['p'] += senti_score * cosine_sim
                     p_count['p']+=1
                 else:
-                    p_score['n'] += senti_score
+                    p_score['n'] += senti_score * cosine_sim
                     p_count['n']+=1
-                p_score['total'] += senti_score
+                p_score['total'] += senti_score * cosine_sim
                 p_count['total']+=1
                 if t_positive[i] in word_in_sentence.keys():
                     word_in_sentence[t_positive[i]]['count']+=1
@@ -680,7 +723,7 @@ def getElmoScore(contents,keyword,num_of_words):
     file = open("./stopwords.txt", "r")
     stop_list = file.read().split()
 
-    one_per = int(total/100)
+    # one_per = int(total/100)
     result = {}
     gpus = tf.config.experimental.list_physical_devices('GPU')
     if gpus:
