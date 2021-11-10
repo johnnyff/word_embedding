@@ -7,7 +7,7 @@ import getpass, os, stat, shutil, re
 import file_handler as fh
 import numpy as np
 import time
-
+import json
 
 class StorageHandler :
     fh.dir = '%s/community_crawler/resources'%(os.getcwd())
@@ -81,7 +81,7 @@ class StorageHandler :
         documents = []
         for c_dir in fh.community_dirs:
             try:
-                docs = self.loadDoc(c_dir, target)
+                docs = self.loadDoc(c_dir, "["+target+"]")
             except:
                 continue
             if not docs is None:
@@ -151,7 +151,7 @@ class StorageHandler :
     #     lines = fh.loadCSV(os.getcwd(), 'ND.csv', column_rows=1, encode='MS949')
     #     dict = {}
     #     for w, p, s in lines:
-    #         ogn = re.sub('(다|하다|이다)$', '', p)
+    #         ogn = re.sub('(다|하다|이다)$', '', p)G
     #         if len(ogn) < 2 :
     #             ogn = p[:-1]
     #             if len(ogn) < 2 : ogn = p
@@ -174,10 +174,10 @@ class StorageHandler :
     #             dict[ogn] = (dict[ogn] + float(s)) / 2
     #     return dict
     def getSentiDictionary(self):
-        lines = fh.loadCSV(os.getcwd(), 'New adjective.csv', column_rows=1, encode='MS949')
-        #print(lines)
+        lines = fh.loadCSV(os.getcwd(), 'sd.csv', column_rows=1, encode='cp949')
+        print(lines)
         dict = {}
-        for w, p, s, k in lines:
+        for w, p, s in lines:
             ogn = re.sub('(다|하다|이다)$', '', w)
             if len(ogn) < 2 :
                 ogn = w[:-1]
@@ -187,6 +187,16 @@ class StorageHandler :
             else:
                 dict[ogn] = (dict[ogn] + float(s)) / 2
         return dict
+
+    def getSentiDictionary2(self):
+        with open('data/SentiWord_info.json', encoding='utf-8-sig', mode='r') as f:
+            data = json.load(f)
+        dict = {}
+        for i in range(len(data)):
+            dict[data[i]['word_root']] = int(data[i]['polarity'])
+							
+        return dict
+        			
     #########################################################################################################
     # calculation
     #########################################################################################################
@@ -319,7 +329,7 @@ class StorageHandler :
         tmp = re.sub('cafe.[a-zA-Z\-_0-9]+\.[a-zA-Z\-_0-9.]+(/[a-zA-Z\-_0-9./=&?]+)?', '', tmp)
         tmp = re.sub('[a-zA-Z\-_0-9]+@[a-zA-Z\-_0-9]+\.[a-zA-Z\-_0-9.]+', '', tmp)
         tmp = re.sub('[가-힣]+([ ]?[0-9]+)?[ ]?:[ ]?|[0-9]+[ ]?:[ ]?', ' ', tmp)
-        tmp = re.sub('[^가-힣0-9a-zA-Z\n\t\r ]+|[.]+', ' ', tmp)
+        tmp = re.sub('[^가-힣0-9a-zA-Z\n\r ]+|[.]+', ' ', tmp)
         tmp = re.sub('[\n ]+', ' ', tmp)
         tmp = re.sub('^[ ]+|[ ]+$', '', tmp)
         return tmp

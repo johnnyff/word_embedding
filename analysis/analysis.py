@@ -438,7 +438,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
 
     # Load Data
     sh = StorageHandler()
-    senti_dict = sh.getSentiDictionary()
+    senti_dict = sh.getSentiDictionary2()
     target = keyword
     tokenizer = KoBertTokenizer.from_pretrained('monologg/kobert')
     tokenized_contents =[]
@@ -470,7 +470,6 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     kw_vec = kw_output[0]
 
     for c in tqdm(contents):
-        print(c)
         for line in c.split('t'):
             cnt+=1
             line =line.strip()
@@ -558,18 +557,18 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     kw_vector, _ = bertmodel(kw_input_ids, kw_attention_mask, kw_token_type_ids)
     kw_vector = kw_vector.squeeze().detach().cpu().numpy().reshape(1,-1)
 
-
-
+    total_cnt = 0
+    totals = 0
+    print("positive length : ", len(positive_sentences))
     for i, st in tqdm(enumerate(positive_sentences)):
     # for num, temp in tqdm(enumerate(tokenized_positive)):
         word_in_sentence = {}
         t_positive=[]
         for num_1, (word,po) in enumerate(mecab.pos(st)):
-            
-            # if po not in ['NNG','NNP','NNB','NR','NP',"VV",'VX','VCP','VCN',"XR",'SL']:
-            #     continue
-            # if (po in ['NNG','NNP','NNB','NR','NP']) and len(word)==1 :
-            #     continue
+            if po not in ['NNG','NNP','NNB','NR','NP',"VV",'VX','VCP','VCN',"XR",'SL']:
+                continue
+            if (po in ['NNG','NNP','NNB','NR','NP']) and len(word)==1 :
+                continue
             if num_1 == 0 :
                 continue
             elif word in stop_list:
@@ -596,15 +595,15 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
         output1, _= bertmodel(input_ids, attention_mask, token_type_ids)
 
         output1 = output1.squeeze()
-        print("output 1: ",output1.size())
         output1 = output1.detach().cpu().numpy()
 
     ##(johnny : keyword vec 나중에 구현)
-
         for i in range(0,len(t_positive)):
+            totals +=1
             if t_positive[i] in senti_dict.keys():
-                cosine_sim = cosine_similarity(output1[i].reshape(1,-1),kw_vector)
-                # print(key_vec)
+                total_cnt+=1
+                cosine_sim = cosine_similarity(output1[i].reshape(1,-1),kw_vector)[0][0]
+
                 # print(outputs[0][i])
                 
                 senti_score = senti_dict[t_positive[i]]
@@ -620,6 +619,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                     word_in_sentence[t_positive[i]]['count']+=1
                 else:
                     word_in_sentence[t_positive[i]] = {'score': senti_dict[t_positive[i]], 'count':1}
+        
         for word in t_positive:
             if word in result_pos.keys() and word not in stop_list:
                 score2 = p_score.copy(); count2 = p_count.copy()
@@ -641,6 +641,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 score2 = p_score.copy(); count2 = p_count.copy()
                 word2 = word_in_sentence.copy()
                 result_pos[word] = { 'score':{'total':score2['total'],'p':score2['p'],'n':score2['n']}, 'count':{'total':count2['total'],'p':count2['p'],'n':count2['n']} , 'related': word2  }
+    
         # if (one_per>0):
         #     progressBarwith_time(num+1, total,start_time)
         
@@ -669,22 +670,37 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
 
             t_negative.append(word)
 
+        if len(t_negative) > max_seq_len - special_tokens_count:
+            t_negative = t_negative[:max_seq_len-special_tokens_count]
+        if len(t_negative)==0 or len(t_negative)==1:
+            continue
+        token_type_ids = [sequence_a_segment_id] * len(t_negative)
+        input_ids = tokenizer.convert_tokens_to_ids(t_negative)
+        attention_mask = [1 if mask_padding_with_zero else 0] * len(t_negative)
 
-    ##(johnny : keyword vec 나중에 구현)
+    
+        input_ids = torch.tensor([input_ids], dtype=torch.long).to(device)
+        attention_mask = torch.tensor([attention_mask], dtype=torch.long).to(device)
+        token_type_ids = torch.tensor([token_type_ids], dtype=torch.long).to(device)
+        output2, _= bertmodel(input_ids, attention_mask, token_type_ids)
+
+        output2 = output2.squeeze()
+        output2 = output2.detach().cpu().numpy()
 
         for i in range(0,len(t_negative)):
+            totals +=1
             if t_negative[i] in senti_dict.keys():
-                # print(key_vec)
-                # print(outputs[0][i])
+                total_cnt+=1
+                cosine_sim = cosine_similarity(output2[i].reshape(1,-1), kw_vector)[0][0]
                 
                 senti_score = senti_dict[t_negative[i]]
                 if senti_score>0:
-                    n_score['p'] += senti_score
+                    n_score['p'] += senti_score * cosine_sim
                     n_count['p']+=1
                 else:
-                    n_score['n'] += senti_score
+                    n_score['n'] += senti_score * cosine_sim
                     n_count['n']+=1
-                n_score['total'] += senti_score
+                n_score['total'] += senti_score * cosine_sim
                 n_count['total']+=1
                 if t_negative[i] in word_in_sentence.keys():
                     word_in_sentence[t_negative[i]]['count']+=1
@@ -711,6 +727,8 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 score3 = n_score.copy(); count3 = n_count.copy()
                 word3 = word_in_sentence.copy()
                 result_neg[word] = { 'score':{'total':score3['total'],'p':score3['p'],'n':score3['n']}, 'count':{'total':count3['total'],'p':count3['p'],'n':count3['n']} , 'related': word3  }
+        print("total cnt : ",total_cnt)
+        print("total  : ",totals)
 
     return result_pos, result_neg
 
