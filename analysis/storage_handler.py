@@ -193,7 +193,7 @@ class StorageHandler :
             data = json.load(f)
         dict = {}
         for i in range(len(data)):
-            dict[data[i]['word_root']] = int(data[i]['polarity'])
+            dict[data[i]['word_root']] = int(data[i]['polarity'])/2
 							
         return dict
         			
@@ -206,24 +206,24 @@ class StorageHandler :
         print("Start saveElmoRelated")
         self.saveElmoRelated(result,num_of_words,path,file)
         
-    def saveBertWords(self,result,num_of_words,path=None,file='Vectors'):
+    def saveBertWords(self,result,type,num_of_words,path=None,file='Vectors'):
         print("Start saveBertScore")
-        self.saveElmoScore(result,num_of_words,path,file)
+        self.saveElmoScore(result,type,num_of_words,path,file)
         print("Start saveBertRelated")
-        self.saveElmoRelated(result,num_of_words,path,file)
+        self.saveElmoRelated(result,type, num_of_words,path,file)
 
-    def saveElmoScore(self,result,num_of_words,path=None,file='Vectors'):
+    def saveElmoScore(self,result,type, num_of_words,path=None,file='Vectors'):
         line = []
         for w in result.keys():
             if num_of_words[w] > 9:
-                line.append([w,num_of_words[w],result[w]['score']['total'],result[w]['count']['total'],result[w]['score']['p'],result[w]['count']['p'],
+                line.append([w,result[w]['pos'],num_of_words[w],result[w]['score']['total'],result[w]['count']['total'],result[w]['score']['p'],result[w]['count']['p'],
                 result[w]['score']['n'],result[w]['count']['n']])
         line.sort(key = lambda x:x[1],reverse = True)  # 점수 / 빈도수로
         if path is None: path = '%s/Results/Scores' % (os.getcwd()).replace('\\', '/')
-        fh.saveCSV(path, file, line, columns=[['Word', 'Count', 'Score', 'Senti-Count', 'P_Score', 'P_Count', 'N_Score', 'N_Count']])
+        fh.saveCSV(path, file, type, line, columns=[['Word', "POS",'Count', 'Score', 'Senti-Count', 'P_Score', 'P_Count', 'N_Score', 'N_Count']])
         return 
 
-    def saveElmoRelated(self,result,num_of_words,path=None,file='Vectors'):
+    def saveElmoRelated(self,result,type, num_of_words,path=None,file='Vectors'):
         lines = []
         line =[]
         for w in result:
@@ -245,7 +245,7 @@ class StorageHandler :
         lines.sort(key = lambda x: x[1],reverse = True)
         
         if path is None: path = '%s/Results/Related' % (os.getcwd()).replace('\\', '/')
-        fh.saveCSV(path, file, lines, columns=[['Word', 'Related word & Score("word(score, count)")']])
+        fh.saveCSV(path, file, type+'_related_', lines, columns=[['Word', 'Related word & Score("word(score, count)")']])
         return  
 
 

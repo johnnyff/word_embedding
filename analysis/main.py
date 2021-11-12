@@ -48,10 +48,11 @@ if __name__ == '__main__':
             result1, result2 = analysis.bert_on_processing(contents,target,num_of_words_pos, num_of_words_neg)
             result_time = time.time()-start
             save_time_start = time.time()
-            sh.saveElmoWords(result1, num_of_words_pos,file=target)
+            sh.saveBertWords(result1,"positive", num_of_words_pos,file
+            =target)
             print("saved positive")
             time.sleep(1)
-            sh.saveElmoWords(result2, num_of_words_neg,file=target)
+            sh.saveBertWords(result2,"negative" , num_of_words_neg,file=target)
             print("saved negative")
             save_time_end = time.time()
             now = time.localtime()

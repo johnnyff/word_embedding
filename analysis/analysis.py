@@ -564,6 +564,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     # for num, temp in tqdm(enumerate(tokenized_positive)):
         word_in_sentence = {}
         t_positive=[]
+        pos_positive = []
         for num_1, (word,po) in enumerate(mecab.pos(st)):
             if po not in ['NNG','NNP','NNB','NR','NP',"VV",'VX','VCP','VCN',"XR",'SL']:
                 continue
@@ -579,6 +580,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 num_of_words_pos[word]= 1
 
             t_positive.append(word)
+            pos_positive.append(po)
 
         if len(t_positive) > max_seq_len - special_tokens_count:
             t_positive = t_positive[:max_seq_len-special_tokens_count]
@@ -618,9 +620,10 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 if t_positive[i] in word_in_sentence.keys():
                     word_in_sentence[t_positive[i]]['count']+=1
                 else:
-                    word_in_sentence[t_positive[i]] = {'score': senti_dict[t_positive[i]], 'count':1}
+                    word_in_sentence[t_positive[i]] = {'score': senti_dict[t_positive[i]],'count':1}
         
-        for word in t_positive:
+        for i, word in enumerate(t_positive):
+            # print(word, pos_positive[i])
             if word in result_pos.keys() and word not in stop_list:
                 score2 = p_score.copy(); count2 = p_count.copy()
                 result_pos[word]['score']['p']+= score2['p']
@@ -640,8 +643,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
             else:
                 score2 = p_score.copy(); count2 = p_count.copy()
                 word2 = word_in_sentence.copy()
-                result_pos[word] = { 'score':{'total':score2['total'],'p':score2['p'],'n':score2['n']}, 'count':{'total':count2['total'],'p':count2['p'],'n':count2['n']} , 'related': word2  }
-    
+                result_pos[word] = {'pos': pos_positive[i],'score':{'total':score2['total'],'p':score2['p'],'n':score2['n']}, 'count':{'total':count2['total'],'p':count2['p'],'n':count2['n']} , 'related': word2  }
         # if (one_per>0):
         #     progressBarwith_time(num+1, total,start_time)
         
@@ -652,6 +654,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
     for i, st in tqdm(enumerate(negative_sentences)):
         word_in_sentence = {}
         t_negative=[]
+        pos_negative = []
 
         for num_1, (word,po) in enumerate(mecab.pos(st)):
 
@@ -669,6 +672,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                 num_of_words_neg[word]= 1
 
             t_negative.append(word)
+            pos_negative.append(po)
 
         if len(t_negative) > max_seq_len - special_tokens_count:
             t_negative = t_negative[:max_seq_len-special_tokens_count]
@@ -706,7 +710,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
                     word_in_sentence[t_negative[i]]['count']+=1
                 else:
                     word_in_sentence[t_negative[i]] = {'score': senti_dict[t_negative[i]], 'count':1}
-        for word in t_negative:
+        for i, word in enumerate(t_negative):
             if word in result_neg.keys() and word not in stop_list:
                 score3 = n_score.copy(); count3 = n_count.copy()
                 result_neg[word]['score']['p']+= score3['p']
@@ -726,9 +730,9 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
             else:
                 score3 = n_score.copy(); count3 = n_count.copy()
                 word3 = word_in_sentence.copy()
-                result_neg[word] = { 'score':{'total':score3['total'],'p':score3['p'],'n':score3['n']}, 'count':{'total':count3['total'],'p':count3['p'],'n':count3['n']} , 'related': word3  }
-        print("total cnt : ",total_cnt)
-        print("total  : ",totals)
+                result_neg[word] = {'pos' : pos_negative[i], 'score':{'total':score3['total'],'p':score3['p'],'n':score3['n']}, 'count':{'total':count3['total'],'p':count3['p'],'n':count3['n']} , 'related': word3  }
+    print("total cnt : ",total_cnt)
+    print("total  : ",totals)
 
     return result_pos, result_neg
 
