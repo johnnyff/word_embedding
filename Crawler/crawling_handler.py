@@ -144,7 +144,7 @@ class CrawlingHandler :
         split = contents.split('\n')
         contents = ' '
         for temp in split:
-            contents += temp.strip()
+            contents += temp.strip()+'/t'
         contents = re.sub('^[\n]+|[\n]+$', '', contents)
         contents = re.sub('([ ]?[\n][ ]?){2,}', '\n\n', contents)
 
@@ -254,7 +254,6 @@ class CrawlingHandler :
             pass
         try:
             contents = self.parseContents(soup.find("div",{"id":"dic_area"}).text)
-            
         except:
             return document
         contents+= '/t'
@@ -284,7 +283,7 @@ class CrawlingHandler :
     def daum_list_crawling(self,keyword):
         docs = []
         query = self.quote(keyword)
-        page =77
+        page =1
         had_url = self.sh.loadURL('daum',keyword)
         #https://search.daum.net/search?w=cafe&DA=PGD&q= keyword &sort=accuracy&ASearchType=1&lpp=10&rlang=0&req=cafe&p=1 
         # 이전 페이지의 첫번째 url이 지금 url과 같다면 새로운 페이지가 생기지 않은 것
@@ -463,7 +462,7 @@ class CrawlingHandler :
                     break
             page+=1
         contents = self.parseContents(comment)
-        print("before document : ", document)
+        # print("before document : ", document)
         document+=[time,author,contents]
         # document +=[contents]
         driver.close()
@@ -472,6 +471,7 @@ class CrawlingHandler :
         
         count = 1
         total = len(docs)
+        print("total :", total)
         print("Process "+str(process)+"  Documents crawling start. documents count : "+str(total))
         for doc in tqdm(docs):
             document = self.daum_doc_crawling(doc)
@@ -808,6 +808,23 @@ class CrawlingHandler :
         ,'as6060' #맨유
         ,'lfckorea'
         ,'dogpalza'#강사모
+        ,'navercafezz' # 라식을 준비하는 사람들
+        ,'2013platonic' # 안구건조증
+        ,'ndslromdown2' #백내장
+        ,'chuldo' #철도청
+        ,'dangsamo' #당사모
+        ,'ketogenic' # 저탄고지
+        ,'mana129'#라미네이트
+        ,'newsmaker'#지방흡임
+        ,'cosmania' #피우더룸
+        ,'acnescar' #피부인
+        ,'bnjob' #뷰앤잡
+        ,'fitthesize' # 핏더사이즈
+        ,'ttoksun2' #어스맘
+        ,'soimarket' # 구매대행
+        ,'hotdealcommunity'# 쇼핑매니아
+        ,'nyblog' #직구
+        ,'parisienlook' #명품
         ]
         self.distributeList(2, keyword, 'navercafe',cafe_list, self.navercafe_list_crawling)
 
@@ -980,7 +997,7 @@ class CrawlingHandler :
 
         #미주알 고주알  >> 등업필요
         xpath_dict = {}
-        
+  
         
         #xpath_dict['']
         xpath_dict['ilovegm1'] = xpath_dict['sssw'] = xpath_dict['anycallusershow'] = xpath_dict['costco12'] = xpath_dict['emsibt'] = xpath_dict['akdongfan']\
@@ -990,7 +1007,8 @@ class CrawlingHandler :
         = xpath_dict['hmckorea'] = xpath_dict['nds07'] = xpath_dict['scottycameron'] = xpath_dict['star2mania'] =  xpath_dict['dgmom365'] = xpath_dict['a60a70']\
         = xpath_dict['isajime'] = xpath_dict['imsanbu'] =  xpath_dict['skybluezw4rh'] =  xpath_dict['msbabys'] = xpath_dict['3dpchip'] = xpath_dict['formsunmyeong']\
         = xpath_dict['bikecargogo'] = xpath_dict['temadica'] = xpath_dict['likeusstock'] = xpath_dict['lilka'] = xpath_dict['rapsup'] = xpath_dict['youloveu']= xpath_dict['jellyfishkimsejung']\
-        = '//*[@id="info-search"]/form/button'
+        = xpath_dict['soimarket'] = xpath_dict['fitthesize'] = xpath_dict['acnescar'] = xpath_dict['newsmaker'] = xpath_dict['ketogenic']\
+            ='//*[@id="info-search"]/form/button'
 
         xpath_dict['gangmok'] = xpath_dict['inmacbook'] = xpath_dict['komusincafe'] = xpath_dict['campingfirst'] = xpath_dict['fifaco']\
         = xpath_dict['fx8300']= xpath_dict['movie02'] = xpath_dict['bebettergirls'] = xpath_dict['no1sejong'] = xpath_dict['kookminlease']\
@@ -1006,7 +1024,9 @@ class CrawlingHandler :
         = xpath_dict['perfumelove'] =xpath_dict['smartbargain'] = xpath_dict['jpnstory'] = xpath_dict['warcraftgamemap'] = xpath_dict['firenze']\
         =xpath_dict['jpnstory'] = xpath_dict['pnmath']=xpath_dict['mhs01'] = xpath_dict['rainup'] = xpath_dict['develoid'] = xpath_dict['army58cafe']\
         = xpath_dict['onimobile']= xpath_dict['chuldo'] = xpath_dict['remonterrace'] = xpath_dict['lessoninfo']= xpath_dict['as6060'] = xpath_dict['lfckorea'] \
-        ='//*[@id="cafe-search"]/form/button'
+        = xpath_dict['nyblog']= xpath_dict['parisienlook']= xpath_dict['hotdealcommunity']= xpath_dict['ttoksun2']= xpath_dict['bnjob'] = xpath_dict['cosmania']\
+        = xpath_dict['mana129']= xpath_dict['dangsamo']= xpath_dict['chuldo']= xpath_dict['ndslromdown2']= xpath_dict['2013platonic']= xpath_dict['navercafezz']\
+        = '//*[@id="cafe-search"]/form/button'
      
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--headless')
@@ -1448,7 +1468,7 @@ class CrawlingHandler :
             soup = BeautifulSoup(response,"lxml")
             rbs = soup.find_all('div',attrs={"class":"rankingnews_box"})
             for rb in rbs:
-                lis = rb.select('div > ul > li')
+                lis = rb.select('ul > li')
                 for li in lis:
                     try:
                         a = li.find('a')
@@ -1456,16 +1476,14 @@ class CrawlingHandler :
                     
                         href = a['href']
                         u = 'https://news.naver.com'+href
-                        # print(u)
                     except Exception as e:
-                        # print(e)
                         continue
                     
                     #print(a)
                     if u in had_url: continue
                     had_url.append(u)
                     url.append(u)
-                    #print(a)
+                    # print(u)
                     docs.append([u,keyword])
                     if len(had_url)<20000:
                             self.sh.saveRankingNewsURL(keyword, [u])
@@ -1607,10 +1625,11 @@ class CrawlingHandler :
         try :
             Id = driver.find_element_by_name('username')
             Id.send_keys('elapinsta@gmail.com')
-            password = driver.find_element_by_id('password')
+            time.sleep(1)
+            password = driver.find_element_by_name('password')
             password.send_keys('##sangsoo1')
             password.submit()
-            time.sleep(4)
+            time.sleep(3)
             # keyword_area = driver.find_element_by_xpath('p')
             # keyword_area.send_keys(keyword)
             # keyword_area.submit()
@@ -1628,40 +1647,40 @@ class CrawlingHandler :
         driver.get("https://www.instagram.com/explore/tags/"+keyword)
         
         first_poster = WebDriverWait(driver,10).until(
-                EC.presence_of_element_located((By.XPATH,'//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[1]/a/div[1]/div[2]')))
-
-        first_poster.click()
-        date_object_css="div.k_Q0X.NnvRN > a.c-Yi7 > time._1o9PC.Nzb55" 
+                EC.presence_of_element_located((By.CSS_SELECTOR,'div._9AhH0')))
+        time.sleep(2)
+        driver.find_element_by_css_selector('div._9AhH0').click()
+        # first_poster.click()
+        print("clicked")
+        time.sleep(2)
+        date_object_css="body > div._2dDPU.QPGbb.CkGkG > div._32yJO > div > article > div > div.HP0qD > div > div > div.eo2As > div.k_Q0X.I0_K8.NnvRN > a > time" 
         main_text_object_css="div.C7I1f.X7jCj > div.C4VMK > span" 
-        comment_more_btn="button.dCJp8.afkep" 
+        comment_more_btn="body > div._2dDPU.QPGbb.CkGkG > div._32yJO > div > article > div > div.HP0qD > div > div > div.eo2As > div.EtaWk > ul > li > div > button > div > svg" 
         comment_texts_objects_css="ul.Mr508 > div.ZyFrc > li.gElp9.rUo9f > div.P9YgZ > div.C7I1f > div.C4VMK > span" 
         print_flag=True
-        next_arrow_btn_css1="._65Bje.coreSpriteRightPaginationArrow" 
+        next_arrow_btn_css1="._65Bje.coreSpriteRightPaginationArrow"
         next_arrow_btn_css2="._65Bje.coreSpriteRightPaginationArrow"
 
 
-
-        
-        wish_num = 10000
+        wish_num = 200
         count_extract = 0 
 
         check_arrow = True 
 
         while True:
-            if(count_extract %30 ==0):
-                time.sleep(random.randint(0,10))
+            if(count_extract %50 ==0):
+                time.sleep(random.randint(0,5))
             upload_ids = [] 
             date_times = [] 
             date_titles = [] 
             main_texts = [] 
             comments = [] 
-          
             if count_extract > wish_num: 
                 break 
-            time.sleep(3.0+random.random()) # 
+            time.sleep(random.random()) # 
             if check_arrow == False: 
                 break 
-                
+            
             # 날짜
             try: 
                 date_object = driver.find_element_by_css_selector(date_object_css) 
@@ -1670,19 +1689,21 @@ class CrawlingHandler :
             except: 
                 date_time = None 
                 date_title = None 
-                
+            
             # 본문 
             try: 
                 main_text_object = driver.find_element_by_css_selector(main_text_object_css) 
                 main_text = main_text_object.text +'/t'
+
             except: main_text = None 
 
             # 댓글
             ## 더보기 버튼 클릭 
             try: 
+
                 while True: 
                     try: 
-                        more_btn = driver.find_element_by_css_selector(comment_more_btn) 
+                        more_btn = driver.find_element_by_css_selector(comment_more_btn)
                         more_btn.click() 
                     except: break 
             except: 
@@ -1690,6 +1711,7 @@ class CrawlingHandler :
                 continue 
         ## 댓글 데이터  
             try: 
+
                 comment_data = " "
                 comment_texts_objects = driver.find_elements_by_css_selector(comment_texts_objects_css) 
                 try: 
@@ -1704,20 +1726,26 @@ class CrawlingHandler :
             date_times.append(date_time) 
             date_titles.append(date_title) 
             main_texts.append(main_text) 
-            comments.append(comment_data) 
+            comments.append(comment_data)
+            print(comments)
             if print_flag: 
                 # print("upload id : ", upload_id) 
                 # print("main : ", main_text) 
                 # print("comment : ", comment_data) 
                 print(count_extract)
             try: 
+
+
                 WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, next_arrow_btn_css1))) 
-                driver.find_element_by_css_selector(next_arrow_btn_css2).click() 
-            except: check_arrow = False 
+                driver.find_element_by_css_selector(next_arrow_btn_css2).click()
+            except:
+                check_arrow = False
 
             try:
                 
                 return_list = ["url_info",date_time,main_text,"none",comment_data]
+                
+
                 self.sh.saveInsta(keyword, return_list)
             except Exception as e:
                 pass
@@ -2729,20 +2757,14 @@ class CrawlingHandler :
                 now_page = int(soup.find("div",{"class":"exPagNav a1"}).find("strong").text)
             except Exception as e: break
             if not page == now_page: break
-            
 #            print ('"'+keyword+'" list is crawling page '+str(page)+' from hygall.')
             flag = True
-            try:
-                trs = soup.find_all("tr",{"class":"docList exBg0"})
-            except Exception as e:
-                print(e)
-                #sys.stdout.write(search_url)
-                continue
-            for tr in trs:
+            
+            for tr in soup.find_all("td", {'class':"title"}):
                 if flag:
                     flag = False
                     continue
-                a = tr.find("td",{"class":"title"}).find("a")
+                a = tr.find("a")
                 url = a['href']
                 title = a.text+'/t'
                 if url in had_url or title in had_title: continue
@@ -3690,9 +3712,9 @@ class CrawlingHandler :
             else:
                 prev_urls = current_urls
             page+=1
-            
+            if page==4:
+                break
 #쇼핑 검색 목록 url모음
-        driver.close()
         return urls
     
     def naver_doc_crawling(self, document):
@@ -3718,6 +3740,7 @@ class CrawlingHandler :
             flag = True
         except Exception as e:
             flag = False
+        print("check ", flag)
         if flag:
             xpath_num=2
             while True:
@@ -3738,7 +3761,7 @@ class CrawlingHandler :
                             author = li.find("span",{"class":"info"}).find_all("span",{"class":"info_cell"})[1].text
                             content = self.parseContents(content)
                             author = self.parseContents(author)
-                            contents += content +'/t'
+                            contents += content 
                             authors += author + '.'
                         except Exception as e:
                             if len(contents)<=1:
@@ -3770,9 +3793,6 @@ class CrawlingHandler :
                                 driver.find_element_by_xpath('//*[@id="area_review_list"]/div[4]/a[%s]'%(xpath_num-1)).click()  # 1~10
                         except:
                             break 
-
-
-
                 page+=1
                 xpath_num+=1
             if len(contents)<=1:
