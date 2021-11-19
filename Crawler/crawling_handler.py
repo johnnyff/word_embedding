@@ -2903,8 +2903,9 @@ class CrawlingHandler :
                 return docs
             xpath_num+=1
             page+=1
-            # if page == 10:
-            #     return docs
+            if page == 10:
+                return docs
+
         return docs
     def slrclub_doc_crawling(self,document):
         
@@ -2932,6 +2933,7 @@ class CrawlingHandler :
             author = self.parseContents(soup.find("td",{"class":"nick"}).text)
             time_line = self.parseContents((soup.find("td",{"class":"date bbs_ct_small"}).text).replace('/','.'))
             contents = self.parseContents(soup.find("div",{"id":"userct"}).text)
+            print("contents : ", contents)
         except Exception as e:
 #            print(e)
             return document
@@ -2955,16 +2957,16 @@ class CrawlingHandler :
         except Exception as e:
             #contents = contents_limit(contents)
             document += [time_line,author,contents]
-
         return document
 
-    def slrclub_docs_crawling(self, process, keyword, docs):
+    def slrclub_docs_crawling(self,keyword, docs):
         
         
         count = 1
         total = len(docs)
-        print("Process "+str(process)+"  Documents crawling start. documents count : "+str(total))
+        print("Process Documents crawling start. documents count : "+str(total))
         for doc in docs:
+            print(doc)
             document = self.slrclub_doc_crawling(doc)
             if document and len(document) >4:
                 count += 1
@@ -3196,11 +3198,11 @@ class CrawlingHandler :
             time_line =self.parseContents(td.find("span",{"class":"mw_basic_view_datetime"}).text.replace(".","-"))
             author = self.parseContents(td.find("span",{"class":"member"}).text)
             td = soup.find("td",{"class":"mw_basic_view_content"})
-            contents = self.parseContents(td.find("div").text)+'/t'
+            contents = self.parseContents(td.find("div").text).strip()+'/t'
             try:
                 table = soup.find_all("table",{"class":"mw_basic_comment_content"})
                 for td in table:
-                    comment += td.text+'/t'
+                    comment += td.text.strip()+'/t'
                 #contents = contents_limit(contents+comment)
                 contents+=comment
                 document += [time_line,author,contents]
@@ -3276,7 +3278,7 @@ class CrawlingHandler :
             response = driver.page_source
         except:
             print(document[0])
-        if not response: return document
+            return document
         soup = BeautifulSoup(response,"lxml")
         commentnum=1
         comments='\n'
