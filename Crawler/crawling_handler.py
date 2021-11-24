@@ -3282,7 +3282,7 @@ class CrawlingHandler :
         soup = BeautifulSoup(response,"lxml")
         commentnum=1
         comments='\n'
-        try:
+        try:    
             btm_area = soup.find("div",{"class":"btm_area clear"})
             time_line = self.parseContents(btm_area.find("div",{"class":"side fr"}).text.replace(".","-"))
             author = self.parseContents(btm_area.find("div",{"class":"side"}).text)
@@ -3294,10 +3294,11 @@ class CrawlingHandler :
                     comments += (div[1].text).strip()+'/t'
                 #contents = contents_limit(contents+comments)
                 contents+=comments
-                document += [time_line,author,contents+comments]
+                # document += [time_line,author,contents+comments]
             except Exception as e:
+                pass
 #                contents = contents_limit(contents)
-                document += [time_line,author,contents]
+            document += [time_line,author,contents]
         except Exception as e:
             driver.close()
             return document
@@ -3398,14 +3399,23 @@ class CrawlingHandler :
         docs = []
         query = self.quote(keyword)
         had_url = self.sh.loadURL('bobae',keyword)
+
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
+
+        driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
+
         ####################################### 자유게시판 ######################################
         while True:
-            search_url = 'https://m.bobaedream.co.kr/board/new_writing/freeb/'+str(page)+'?keyword='+query+'&s_cate=Body'
-            response = self.getResponse(search_url)
-            if not response: break
+            driver.get('https://m.bobaedream.co.kr/board/new_writing/freeb/'+str(page)+'?keyword='+query+'&s_cate=Body')
             #sys.stdout.write(search_url)
             #soup = BeautifulSoup(response.text,"lxml")
-            soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
+            response = driver.page_source
+            soup = BeautifulSoup(response, 'lxml')
+            # soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
             try:
                 now_page = int(soup.find("div",{"class":"page"}).find("span",{"class":"num"}).find("a",{"class":"on"}).text)
             except Exception as e:  break
@@ -3424,15 +3434,18 @@ class CrawlingHandler :
                 docs.append([url,title])
                 had_url.append(url)
             page+=1
+            if page==5:
+                break
         ####################################### 정치게시판 ######################################
+        
         page =1
         
+        
         while True:
-            search_url = 'https://m.bobaedream.co.kr/board/new_writing/politic/'+str(page)+ '?keyword='+query+'&s_cate=Body'
-            response = self.getResponse(search_url)
-            if not response: break
-            #soup = BeautifulSoup(response.text,"lxml")
-            soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
+            driver.get('https://m.bobaedream.co.kr/board/new_writing/politic/'+str(page)+ '?keyword='+query+'&s_cate=Body')
+            response = driver.page_source
+            soup = BeautifulSoup(response,"lxml")
+            # soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
             try:
                 now_page = int(soup.find("div",{"class":"page"}).find("span",{"class":"num"}).find("a",{"class":"on"}).text)
             except Exception as e: break
@@ -3449,7 +3462,8 @@ class CrawlingHandler :
                 docs.append([url,title])
                 had_url.append(url)
             page+=1
-
+            if page ==5:
+                break
 
 
 
@@ -3458,11 +3472,10 @@ class CrawlingHandler :
         ####################################### 유머게시판 ######################################
         page =1
         while True:
-            search_url = 'https://m.bobaedream.co.kr/board/new_writing/strange/'+str(page)+ '?keyword='+query+'&s_cate=Body'
-            response = self.getResponse(search_url)
-            if not response: break
-           # soup = BeautifulSoup(response.text,"lxml")
-            soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
+            driver.get('https://m.bobaedream.co.kr/board/new_writing/strange/'+str(page)+ '?keyword='+query+'&s_cate=Body')
+            response = driver.page_source
+            soup = BeautifulSoup(response,"lxml")
+            # soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
             try:
                 now_page = int(soup.find("div",{"class":"page"}).find("span",{"class":"num"}).find("a",{"class":"on"}).text)
             except Exception as e: break
@@ -3479,14 +3492,22 @@ class CrawlingHandler :
                 docs.append([url,title])
                 had_url.append(url)
             page+=1
+            if page ==5:
+                break
 
         return docs  # [  [url,title], [url,title], [url,title] ]      
     def bobae_doc_crawling(self,document):
-        
-        response = self.getResponse(document[0])
-        if not response: return document
-#        soup = BeautifulSoup(response.text,"lxml")
-        soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
+
+        driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
+        driver.get(document[0])
+        response = driver.page_source
+        soup = BeautifulSoup(response,"lxml")
+        # soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
         comment = '\n'
         try:
             article = soup.find("article",{"class":"article"})
@@ -3510,10 +3531,9 @@ class CrawlingHandler :
         return document  #[ url,title,time,author,contents ]
 
         
-    def bobae_docs_crawling(self, process, keyword, docs):
+    def bobae_docs_crawling(self,keyword, docs):
         count = 1
         total = len(docs)
-        print("Process "+str(process)+" bobae Documents crawling start. documents count : "+str(total))
         for doc in docs:
             document = self.bobae_doc_crawling(doc)
             if document and len(document) >4:
@@ -3622,11 +3642,11 @@ class CrawlingHandler :
         document += [author,date_line, contents]
 
         return document
-    def pann_docs_crawling(self, process, keyword, docs):
+    def pann_docs_crawling(self, keyword, docs):
         
         count = 1
         total = len(docs)
-        print("Process "+str(process)+" Pann Documents crawling start. documents count : "+str(total))
+        # print("Process "+str(process)+" Pann Documents crawling start. documents count : "+str(total))
         for doc in docs:
             document = self.pann_doc_crawling(doc)
             if document and len(document) >4:
@@ -3651,7 +3671,6 @@ class CrawlingHandler :
         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
         had_url = self.sh.loadURL('naver',keyword)
         had_title = self.sh.loadTitle('naver',keyword)
-        
         while True:
 #        for i in range(0,10):
             
@@ -3714,11 +3733,24 @@ class CrawlingHandler :
             else:
                 prev_urls = current_urls
             page+=1
+            print('page : ', page)
             if page==4:
                 break
 #쇼핑 검색 목록 url모음
         return urls
     
+    def naver_docs_crawling(self, keyword, docs):
+    
+        total = len(docs)
+        for doc in docs:
+            document = self.naver_doc_crawling(doc)
+            if document and len(document)>4:  #url, title, date_time,author, contents
+                with self.lock:
+                    self.sh.saveNaverDoc(keyword,document)
+    #            else:
+    #                print('Error occur from Naver site : '+doc[0] +'\nlength ' +str(len(document)))
+        return
+
     def naver_doc_crawling(self, document):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--headless')
@@ -3800,6 +3832,7 @@ class CrawlingHandler :
             if len(contents)<=1:
                 return document
             #contents = contents_limit(contents)
+            print(contents)
             document +=[time_line,authors,contents]
         else:
             xpath_num=2
@@ -3841,6 +3874,7 @@ class CrawlingHandler :
             if len(contents)<=1:
                 return document
             #contents = contents_limit(contents)
+            print("contents : ", contents)
             document+=[time_line,authors,contents]
         driver.close()
         print(document)
@@ -3915,6 +3949,7 @@ class CrawlingHandler :
             except Exception as e:
                 flag = False
                 pass
+
             page+=1
             # try:
             #     for li in lis:
@@ -4440,7 +4475,7 @@ class CrawlingHandler :
                     comment += text+'/t'
                 except Exception as e:
                     break
-            documents += [date_line, author, contents + self.parseContents(comment)]
+            document += [date_line, author, contents + self.parseContents(comment)]
             return document
         except Exception as e:
             if len(contents)>0:
@@ -4455,19 +4490,23 @@ class CrawlingHandler :
         docs = []
         query = self.quote(keyword)
         had_url = self.sh.loadURL('cook82',keyword)
+        print("list crawling started")
         while True :
             search_url = 'http://www.82cook.com/entiz/enti.php?bn=15&searchType=search&search1=1&keys='+query+'&page='+str(page)
             response = self.getResponse(search_url)
+            print(response)
             if not response: break
             #sys.stdout.write(search_url)
             soup = BeautifulSoup(response.text, "lxml")
-
+            print("check")
             try:
                 list = soup.find("div", {"id":"list_table"}).find("table").find("tbody").find_all("tr",)
             except Exception as e: 
                 print(e)
                 print(search_url)
                 break
+            print("check")
+
             if not list or len(list[0].find_all("td")) < 2: break
 #            print ('"'+keyword+'" list is crawling page '+str(page)+' from 82Cook.')
             for row in list :
@@ -4482,9 +4521,48 @@ class CrawlingHandler :
                 docs.append([url, title, date_line])
                 had_url.append(url)
             page += 1
-
+            print(page)
         return docs
-    
+
+    def cook82_doc_crawling(self, document) :
+        
+        response = self.getResponse(document[0])
+        if not response: return document
+        soup = BeautifulSoup(response.text, "lxml")
+        comments = '\n'
+        try:
+            author = soup.find("div", {"class":"readLeft"}).find("strong").text
+            contents = soup.find("div",{"id":"articleBody"}).text
+            author = self.parseContents(author)
+            contents = self.parseContents(contents).strip()+'/t'
+            try:
+                lis = soup.find("ul",{"class":"reples"}).find_all("li")
+                for li in lis:
+                    comments += self.parseContents(li.find("p").text).strip()+'/t'
+                contents = contents+comments
+                document += [author,contents]
+            except Exception as e:
+                document +=[author,contents]
+        except Exception as e:
+            pass
+        print(contents)
+        return document
+
+    def cook82_docs_crawling(self, process, keyword, docs) :
+        
+        count = 1
+        total = len(docs)
+        print("Process "+str(process)+" 82cook Documents crawling start. documents count : "+str(total))
+        for doc in docs:
+            document = self.cook82_doc_crawling(doc)
+            if document and len(document) > 4:
+                count += 1
+                with self.lock:
+                    self.sh.saveCook82Doc(keyword, document)
+#            else:
+#                print('Error occur from cook82 site : '+doc[0])
+        return
+
     # crawling document
     def dcinside_doc_crawling(self, document) :
         
@@ -4515,29 +4593,7 @@ class CrawlingHandler :
         document +=[author,contents]
         return document
      
-    def cook82_doc_crawling(self, document) :
-        
-        response = self.getResponse(document[0])
-        if not response: return document
-        soup = BeautifulSoup(response.text, "lxml")
-        comments = '\n'
-        try:
-            author = soup.find("div", {"class":"readLeft"}).find("strong").text
-            contents = soup.find("div",{"id":"articleBody"}).text
-            author = self.parseContents(author)
-            contents = self.parseContents(contents).strip()+'/t'
-            try:
-                lis = soup.find("ul",{"class":"reples"}).find_all("li")
-                for li in lis:
-                    comments += self.parseContents(li.find("p").text).strip()+'/t'
-                contents = contents+comments
-                document += [author,contents]
-            except Exception as e:
-                document +=[author,contents]
-        except Exception as e:
-            pass
-        return document
-
+    
 
     # crawling documents for multi-process
     def dcinside_docs_crawling(self, process, keyword, docs) :
@@ -4659,34 +4715,7 @@ class CrawlingHandler :
 #            else:
 #                print('Error occur from instiz site : '+doc[0])
         return
-    def cook82_docs_crawling(self, process, keyword, docs) :
-        
-        count = 1
-        total = len(docs)
-        print("Process "+str(process)+" 82cook Documents crawling start. documents count : "+str(total))
-        for doc in docs:
-            document = self.cook82_doc_crawling(doc)
-            if document and len(document) > 4:
-                count += 1
-                with self.lock:
-                    self.sh.saveCook82Doc(keyword, document)
-#            else:
-#                print('Error occur from cook82 site : '+doc[0])
-        return
-    def naver_docs_crawling(self, process, keyword, docs):
-        
-        count =1
-        total = len(docs)
-        print("Process "+str(process)+" Naver Reviews crawling start. documents count : "+str(total))
-        for doc in docs:
-            document = self.naver_doc_crawling(doc)
-            if document and len(document)>4:  #url, title, date_time,author, contents
-                count+=1
-                with self.lock:
-                    self.sh.saveNaverDoc(keyword,document)
-#            else:
-#                print('Error occur from Naver site : '+doc[0] +'\nlength ' +str(len(document)))
-        return
+    
 
     def youtube_list_crawling(self, keyword) :
         chrome_options = webdriver.ChromeOptions()

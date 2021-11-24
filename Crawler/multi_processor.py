@@ -101,7 +101,8 @@ class MultiCrawler :
         print('"'+keyword+'" list crawling start from slrclub.')
         documents = crawler.slrclub_list_crawling(keyword)
         print ('"'+keyword+'" documents '+str(len(documents))+' crawling start from slrclub.')
-        self.distributeList(p_cnt,'Slrclub',keyword,documents,crawler.slrclub_docs_crawling)
+        # self.distributeList(p_cnt,'Slrclub',keyword,documents,crawler.slrclub_docs_crawling)
+        crawler.slrclub_docs_crawling(keyword, documents)
 
     def multiCrawlingHumoruniv(self,keyword, p_cnt=2):
         crawler = CrawlingHandler()
@@ -116,12 +117,15 @@ class MultiCrawler :
         documents = crawler.tistory_list_crawling(keyword)
         print ('"'+keyword+'" documents '+str(len(documents))+' crawling start from tistory.')
         self.distributeList(p_cnt,'tistory',keyword,documents,crawler.tistory_docs_crawling)
+
     def multiCrawlingNaver(self,keyword, p_cnt=2):
         crawler = CrawlingHandler()
         print('"'+keyword+'" list crawling start from naver.')
         documents = crawler.naver_list_crawling(keyword)
         print ('"'+keyword+'" documents '+str(len(documents))+' crawling start from NaverShopping.')
-        self.distributeList(p_cnt,'Naver',keyword,documents,crawler.naver_docs_crawling)
+        crawler.naver_docs_crawling(keyword, documents)
+
+        # self.distributeList(p_cnt,'Naver',keyword,documents,crawler.naver_docs_crawling)
 
     def multiCrawlingTheqoo(self,keyword, p_cnt=2):
         crawler = CrawlingHandler()
@@ -162,7 +166,8 @@ class MultiCrawler :
 
         # distribute list to process
         print ('"'+keyword+'" documents '+str(len(documents))+' crawling start from bobae.')
-        self.distributeList(p_cnt, 'Bobae', keyword, documents, crawler.bobae_docs_crawling)
+        # self.distributeList(p_cnt, 'Bobae', keyword, documents, crawler.bobae_docs_crawling)
+        crawler.bobae_docs_crawling(keyword, documents)
 
 
     def multiCrawlingDcinside(self, keyword, p_cnt=2):
