@@ -589,7 +589,7 @@ class CrawlingHandler :
         doc_cnt = 0
         print("crawling document : %d" %total_url)
         for url in tqdm(urls):
-            if page_cnt == 500 :
+            if page_cnt == 1000 :
             #driver.execute_script('window.open("https://naver.com");')
                 handle +=1
                 time.sleep(random.random())
@@ -1655,11 +1655,11 @@ class CrawlingHandler :
         time.sleep(2)
         date_object_css="body > div._2dDPU.QPGbb.CkGkG > div._32yJO > div > article > div > div.HP0qD > div > div > div.eo2As > div.k_Q0X.I0_K8.NnvRN > a > time" 
         main_text_object_css="div.C7I1f.X7jCj > div.C4VMK > span" 
-        comment_more_btn="body > div._2dDPU.QPGbb.CkGkG > div._32yJO > div > article > div > div.HP0qD > div > div > div.eo2As > div.EtaWk > ul > li > div > button > div > svg" 
+        comment_more_btn="body > div._2dDPU.QPGbb.CkGkG > div._32yJO > div > article > div > div.HP0qD > div > div > div.eo2As > div.EtaWk > ul > li > div > button" 
         comment_texts_objects_css="ul.Mr508 > div.ZyFrc > li.gElp9.rUo9f > div.P9YgZ > div.C7I1f > div.C4VMK > span" 
         print_flag=True
-        next_arrow_btn_css1="._65Bje.coreSpriteRightPaginationArrow"
-        next_arrow_btn_css2="._65Bje.coreSpriteRightPaginationArrow"
+        next_arrow_btn_css1="body > div._2dDPU.QPGbb.CkGkG > div.EfHg9 > div > div > div.l8mY4.feth3 > button"
+        next_arrow_btn_css2="body > div._2dDPU.QPGbb.CkGkG > div.EfHg9 > div > div > div.l8mY4.feth3 > button"
 
 
         wish_num = 200
@@ -1699,16 +1699,16 @@ class CrawlingHandler :
 
             # 댓글
             ## 더보기 버튼 클릭 
-            try: 
+            # try: 
 
-                while True: 
-                    try: 
-                        more_btn = driver.find_element_by_css_selector(comment_more_btn)
-                        more_btn.click() 
-                    except: break 
-            except: 
-                print("----------------------fail to click more btn----------------------------------") 
-                continue 
+            #     while True: 
+            #         try: 
+            #             more_btn = driver.find_element_by_css_selector(comment_more_btn)
+            #             more_btn.click()
+            #         except: break 
+            # except: 
+            #     print("----------------------fail to click more btn----------------------------------") 
+            #     continue 
         ## 댓글 데이터  
             try: 
 
@@ -1734,10 +1734,13 @@ class CrawlingHandler :
                 # print("comment : ", comment_data) 
                 print(count_extract)
             try: 
+                WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'body > div._2dDPU.QPGbb.CkGkG > div.EfHg9 > div > div > div.l8mY4.feth3 > button'))) 
+                next_button = driver.find_element_by_css_selector("body > div._2dDPU.QPGbb.CkGkG > div.EfHg9 > div > div > div.l8mY4.feth3 > button")
+                time.sleep(1)
+                next_button.click()
+                driver.find_element_by_css_selector("body > div._2dDPU.QPGbb.CkGkG > div.EfHg9 > div > div > div.l8mY4.feth3")
 
-
-                WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, next_arrow_btn_css1))) 
-                driver.find_element_by_css_selector(next_arrow_btn_css2).click()
+                print("next!")
             except:
                 check_arrow = False
 
@@ -3374,6 +3377,7 @@ class CrawlingHandler :
             author = self.parseContents(soup.find("div",{"class":"btm_area clear"}).find("div",{"class":"side"}).find("a").text)
             contents = self.parseContents(soup.find("article").text)+'/t'
             document += [time_line,author,contents]
+            print(contents)
         except Exception as e:
             return document
         return document
@@ -3393,7 +3397,11 @@ class CrawlingHandler :
 #                print('Error occur from fm_korea site : '+doc[0])
 
         return
+        
+    
 
+
+    
     def bobae_list_crawling(self,keyword):   # 보배드림
         page =1
         docs = []
@@ -3404,18 +3412,34 @@ class CrawlingHandler :
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
+        # chrome_options.add_extension("extension_2_33_2_0.crx")
+
+        # chrome_options.add_extension("vpn/bihmplhobchoageeokmgbdihknkjbknd.zip"0)
         chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
 
         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
+        driver.get("https://www.proxysite.com/")
+        time.sleep(3)
+        input_box = driver.find_element_by_css_selector("#url-form-wrap > form > div.row > input[type=text]")
+        input_box.send_keys("https://www.bobaedream.co.kr")
+        input_box.submit()
+        time.sleep(5)
 
+        
         ####################################### 자유게시판 ######################################
         while True:
-            driver.get('https://m.bobaedream.co.kr/board/new_writing/freeb/'+str(page)+'?keyword='+query+'&s_cate=Body')
-            #sys.stdout.write(search_url)
-            #soup = BeautifulSoup(response.text,"lxml")
+            # driver.get('https://m.bobaedream.co.kr/board/new_writing/freeb/'+str(page)+'?keyword='+query+'&s_cate=Body')
+            time.sleep(15)
+            WebDriverWait(driver,20).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR,'#include-form > p:nth-child(1) > input.url-input.url-text'))
+                    )
+            proxy_box = driver.find_element_by_css_selector('#include-form > p:nth-child(1) > input.url-input.url-text')
+            proxy_box.clear()
+            proxy_box.send_keys('https://m.bobaedream.co.kr/board/new_writing/freeb/'+str(page)+'?keyword='+query+'&s_cate=Body')
+            proxy_box.submit()
+            
             response = driver.page_source
             soup = BeautifulSoup(response, 'lxml')
-            # soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
             try:
                 now_page = int(soup.find("div",{"class":"page"}).find("span",{"class":"num"}).find("a",{"class":"on"}).text)
             except Exception as e:  break
@@ -3427,25 +3451,40 @@ class CrawlingHandler :
             for li in lis:
                 info = li.find("div",{"class":"info"})
                 a = info.find("a")
-                test = a['href'].split('/')
-                url ='https://m.bobaedream.co.kr/'+ test[1]+'/'+test[2]+'/'+test[3]+'/'+test[4]+'/'+test[5]+'/'+str(page)+'?keyword='+query+'&s_cate=Subject'
+                # test = a['href'].split('/')
+                # url ='https://m.bobaedream.co.kr/'+ test[1]+'/'+test[2]+'/'+test[3]+'/'+test[4]+'/'+test[5]+'/'+str(page)+'?keyword='+query+'&s_cate=Subject'
+                url = a['href']
                 title = a.find("div",{"class":"txt"}).find("span",{"class":"cont"}).text
                 if url in had_url: continue
                 docs.append([url,title])
                 had_url.append(url)
+                print(url)
             page+=1
-            if page==5:
-                break
+            if page==3:
+                break 
         ####################################### 정치게시판 ######################################
         
         page =1
         
         
         while True:
-            driver.get('https://m.bobaedream.co.kr/board/new_writing/politic/'+str(page)+ '?keyword='+query+'&s_cate=Body')
-            response = driver.page_source
-            soup = BeautifulSoup(response,"lxml")
+            # driver.get('https://m.bobaedream.co.kr/board/new_writing/politic/'+str(page)+ '?keyword='+query+'&s_cate=Body')
+            # response = driver.page_source
+            # soup = BeautifulSoup(response,"lxml")
             # soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
+
+            time.sleep(15)
+            WebDriverWait(driver,20).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR,'#include-form > p:nth-child(1) > input.url-input.url-text'))
+                    )
+            proxy_box = driver.find_element_by_css_selector('#include-form > p:nth-child(1) > input.url-input.url-text')
+            proxy_box.clear()
+            proxy_box.send_keys('https://m.bobaedream.co.kr/board/new_writing/politic/'+str(page)+ '?keyword='+query+'&s_cate=Body')
+            proxy_box.submit()
+            
+            response = driver.page_source
+            soup = BeautifulSoup(response, 'lxml')
+
             try:
                 now_page = int(soup.find("div",{"class":"page"}).find("span",{"class":"num"}).find("a",{"class":"on"}).text)
             except Exception as e: break
@@ -3455,27 +3494,38 @@ class CrawlingHandler :
             for li in lis:
                 info = li.find("div",{"class":"info"})
                 a = info.find("a")
-                test = a['href'].split('/')
-                url ='https://m.bobaedream.co.kr/'+ test[1]+'/'+test[2]+'/'+test[3]+'/'+test[4]+'/'+test[5]+'/'+str(page)+'?keyword='+query+'&s_cate=Subject'
+                url = a['href']
+                # test = a['href'].split('/')
+                # url ='https://m.bobaedream.co.kr/'+ test[1]+'/'+test[2]+'/'+test[3]+'/'+test[4]+'/'+test[5]+'/'+str(page)+'?keyword='+query+'&s_cate=Subject'
                 title = a.find("div",{"class":"txt"}).find("span",{"class":"cont"}).text
                 if url in had_url: continue
                 docs.append([url,title])
                 had_url.append(url)
             page+=1
-            if page ==5:
+            if page ==2:
                 break
-
-
 
 
 
         ####################################### 유머게시판 ######################################
         page =1
         while True:
-            driver.get('https://m.bobaedream.co.kr/board/new_writing/strange/'+str(page)+ '?keyword='+query+'&s_cate=Body')
-            response = driver.page_source
-            soup = BeautifulSoup(response,"lxml")
+            # driver.get('https://m.bobaedream.co.kr/board/new_writing/strange/'+str(page)+ '?keyword='+query+'&s_cate=Body')
+            # response = driver.page_source
+            # soup = BeautifulSoup(response,"lxml")
             # soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
+            time.sleep(15)
+            WebDriverWait(driver,20).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR,'#include-form > p:nth-child(1) > input.url-input.url-text'))
+                    )
+            proxy_box = driver.find_element_by_css_selector('#include-form > p:nth-child(1) > input.url-input.url-text')
+            proxy_box.clear()
+            proxy_box.send_keys('https://m.bobaedream.co.kr/board/new_writing/strange/'+str(page)+ '?keyword='+query+'&s_cate=Body')
+            proxy_box.submit()
+            
+            response = driver.page_source
+            soup = BeautifulSoup(response, 'lxml')
+            
             try:
                 now_page = int(soup.find("div",{"class":"page"}).find("span",{"class":"num"}).find("a",{"class":"on"}).text)
             except Exception as e: break
@@ -3485,14 +3535,15 @@ class CrawlingHandler :
             for li in lis:
                 info = li.find("div",{"class":"info"})
                 a = info.find("a")
-                test = a['href'].split('/')
-                url ='https://m.bobaedream.co.kr/'+ test[1]+'/'+test[2]+'/'+test[3]+'/'+test[4]+'/'+test[5]+'/'+str(page)+'?keyword='+query+'&s_cate=Subject'
+                url = a['href']
+                # test = a['href'].split('/')
+                # url ='https://m.bobaedream.co.kr/'+ test[1]+'/'+test[2]+'/'+test[3]+'/'+test[4]+'/'+test[5]+'/'+str(page)+'?keyword='+query+'&s_cate=Subject'
                 title = a.find("div",{"class":"txt"}).find("span",{"class":"cont"}).text
                 if url in had_url: continue
                 docs.append([url,title])
                 had_url.append(url)
             page+=1
-            if page ==5:
+            if page ==2:
                 break
 
         return docs  # [  [url,title], [url,title], [url,title] ]      
@@ -3504,7 +3555,17 @@ class CrawlingHandler :
         chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
 
         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
-        driver.get(document[0])
+        # driver.get(document[0])
+
+        time.sleep(15)
+        WebDriverWait(driver,20).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR,'#include-form > p:nth-child(1) > input.url-input.url-text'))
+                )
+        proxy_box = driver.find_element_by_css_selector('#include-form > p:nth-child(1) > input.url-input.url-text')
+        proxy_box.clear()
+        proxy_box.send_keys('eu14.proxysite.com'+document[0])
+        proxy_box.submit()
+
         response = driver.page_source
         soup = BeautifulSoup(response,"lxml")
         # soup = BeautifulSoup(response.content,'html.parser',from_encoding='utf-8')
@@ -3642,11 +3703,11 @@ class CrawlingHandler :
         document += [author,date_line, contents]
 
         return document
-    def pann_docs_crawling(self, keyword, docs):
+    def pann_docs_crawling(self, process, keyword, docs):
         
         count = 1
         total = len(docs)
-        # print("Process "+str(process)+" Pann Documents crawling start. documents count : "+str(total))
+        print("Process "+str(process)+" Pann Documents crawling start. documents count : "+str(total))
         for doc in docs:
             document = self.pann_doc_crawling(doc)
             if document and len(document) >4:
@@ -3657,7 +3718,95 @@ class CrawlingHandler :
 #                print('Error occur from pann site : '+doc[0])
         return
 
+    def naver_shopping_on_processing(self,keyword):
+    
+        query = self.quote(keyword)
         
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
+        had_url = self.sh.loadURL('naver',keyword)
+        had_title = self.sh.loadTitle('naver',keyword)
+        document = []
+        for page in range(1,11):
+            search_url = 'https://search.shopping.naver.com/search/all?frm=NVSHATC&origQuery='+query+'&pagingIndex='+str(page)+'&pagingSize=40&productSet=total&query='+query+'&sort=review&timestamp=&viewType=list#'
+            driver.get(search_url)
+            elem = driver.find_element_by_tag_name("body")
+            pagedowns=1
+            while pagedowns <100:
+                elem.send_keys(Keys.PAGE_DOWN)
+                pagedowns+=1
+            response = driver.page_source
+#            response = self.getResponse(search_url)
+            if not response: 
+#                print("no")
+                return
+#            soup = BeautifulSoup(response.text,"lxml")
+            #print(page)
+#            print ('"'+keyword+'" list is crawling page '+str(page)+' from Naver.')
+            soup = BeautifulSoup(response,"lxml")
+            try:
+                temp_now_page = soup.find("div",{"class":"pagination_num__-IkyP"}).find("span",{"class":"pagination_btn_page__FuJaU active"}).text
+                now_page = re.findall("\d+",temp_now_page)
+            except Exception as e: break
+            if not page == int(now_page[0]): break
+            lists = soup.find_all("div",{"class":"basicList_title__3P9Q7"})
+            prev_urls=[]
+            current_urls=[]
+            
+            for item in lists:
+                flag = False
+                a = item.find("a")
+                url = a['href']
+                title = a.text+'/t'
+                driver.get(url)
+                try:
+                    rs = driver.page_source
+                    bs = BeautifulSoup(rs,"lxml")
+                    loading = bs.find("div",{"class":"loading_area"}).text
+                    if loading :
+                        flag = True  # 네이버쇼핑이 아니고 다른 쇼핑몰로 넘어가는 경우 loading == 해당 쇼핑몰로 이동중입니다.
+                except Exception as e:
+                    pass
+                if url in had_url or flag or title in had_title: continue
+                
+                #review 
+                driver.get(url+"#REVIEW")
+                time.sleep(0.5)
+                last_flag = True
+                while(last_flag):
+                    try : 
+                        next = driver.find_element_by_css_selector("#REVIEW > div > div._2y6yIawL6t > div > div.cv6id6JEkg > div > div > a.fAUKm1ewwo._2Ar8-aEUTq")
+                    except :
+                        print("except")
+                        last_flag = False
+                    review_container = driver.find_elements_by_css_selector("#REVIEW > div > div._2y6yIawL6t > div > div.cv6id6JEkg > div > div > a.UWN4IvaQza")
+                    for container in review_container:
+                        container.click()
+                        time.sleep(0.5)
+                        review_lis= driver.find_elements_by_css_selector("div._19SE1Dnqkf > div > span")
+                        document = []
+                        res = ""
+                        for review in review_lis:
+                            try :
+                                res+= review.text +'/t'
+                            except:
+                                pass
+                        document += [url,title,"","", res.strip()]
+                        print(res.strip())
+                        self.sh.saveNaverDoc(keyword,document)
+                    try :
+                        next.click()
+                    except :
+                        break
+                    time.sleep(2)
+
+
+
+
     def naver_list_crawling(self,keyword):
         urls=[]
         page =1
@@ -3678,7 +3827,7 @@ class CrawlingHandler :
             driver.get(search_url)
             elem = driver.find_element_by_tag_name("body")
             pagedowns=1
-            while pagedowns <30:
+            while pagedowns <1000:
                 elem.send_keys(Keys.PAGE_DOWN)
                 pagedowns+=1
             response = driver.page_source
@@ -3734,6 +3883,8 @@ class CrawlingHandler :
                 prev_urls = current_urls
             page+=1
             print('page : ', page)
+
+            #set limit
             if page==4:
                 break
 #쇼핑 검색 목록 url모음
@@ -3770,7 +3921,7 @@ class CrawlingHandler :
         try:
 #            test = soup.find("a",{"class":"_purchase_review_tab link N=a:tab.review"}).text
 #            test = soup.find("a",{"href":"#revw"})
-            test = soup.find_all("li",{"class":"thumb_nail"})[0].find("div",{"class":"atc_area"})
+            review_box = soup.find_all("li",{"class":"thumb_nail"})[0].find("div",{"class":"atc_area"})
             flag = True
         except Exception as e:
             flag = False
@@ -3951,6 +4102,7 @@ class CrawlingHandler :
                 pass
 
             page+=1
+            if page==300: break
             # try:
             #     for li in lis:
             #         a = li.select('div > div[1] > a')

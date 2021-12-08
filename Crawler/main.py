@@ -89,7 +89,7 @@ if __name__ == '__main__' :
                   mc.distributeProcess(keyword, processes)
                   sys.stdout.flush()
                   print("Community "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
-            processes = [mc.multiCrawlingHumoruniv, mc.multiCrawlingNaver, mc.multiCrawlingTheqoo, mc.multiCrawlingEtoland]
+            processes = [mc.multiCrawlingHumoruniv, mc.multiCrawlingTheqoo, mc.multiCrawlingEtoland]
             start = datetime.now()
             for keyword in keywords:
                   community_start = datetime.now()
@@ -97,8 +97,17 @@ if __name__ == '__main__' :
                   mc.distributeProcess(keyword, processes)
                   sys.stdout.flush()
                   print("Community "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
+
+            processes = [mc.multiCrawlingNaver]
+            start = datetime.now()
+            for keyword in keywords:
+                  community_start = datetime.now()
+                  print("Community "+keyword+" crawling start.")
+                  mc.distributeProcess(keyword, processes)
+                  sys.stdout.flush()
+                  print("Community "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))      
             
-            processes = [mc.multiCrawlingDcinside,mc.multiCrawlingFmkorea, mc.multiCrawlingPann, mc.multiCrawlingBobae,  mc.multiCrawlingMlbpark]
+            processes = [mc.multiCrawlingDcinside, mc.multiCrawlingPann, mc.multiCrawlingBobae,  mc.multiCrawlingMlbpark]
             start = datetime.now()
             for keyword in keywords:
                   community_start = datetime.now()
@@ -107,7 +116,7 @@ if __name__ == '__main__' :
                   sys.stdout.flush()
                   print("Community "+keyword+" crawling finish. spend time :",(datetime.now()-community_start))
                   
-            processes = [mc.multiCrawlingInven, mc.multiCrawlingTodayhumor, mc.multiCrawlingPpomppu, mc.multiCrawlingClien, mc.multiCrawlingInstiz, mc.multiCrawlingCook82, mc.multiCrawlingYoutube ]
+            processes = [mc.multiCrawlingInven, mc.multiCrawlingPpomppu, mc.multiCrawlingClien, mc.multiCrawlingInstiz, mc.multiCrawlingCook82, mc.multiCrawlingRuliweb ]
             start = datetime.now()
             for keyword in keywords:
                   community_start = datetime.now()
@@ -115,6 +124,16 @@ if __name__ == '__main__' :
                   mc.distributeProcess(keyword, processes)
                   sys.stdout.flush()
                   print("Community "+keyword+" crawling finish. spend time :",(datetime.now()-community_start))
+
+      
+            # processes = []
+            # start = datetime.now()
+            # for keyword in keywords:
+            #       community_start = datetime.now()
+            #       print("Community "+keyword+" crawling start.")
+            #       mc.distributeProcess(keyword, processes)
+            #       sys.stdout.flush()
+            #       print("Community "+keyword+"
 
 
             processes = [mc.multiCrawlingNavercafe]
