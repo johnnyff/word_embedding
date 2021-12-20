@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
-# Developer : Jeong Wooyoung, EGLAB, Hongik University
-# Contact   : gunyoung20@naver.com
+# Developer : Jeong Wooyoung, EGLAB, Hongik University , Dongin Kang
+# Contact   : gunyoung20@naver.com, rkd2016@gmail.com
 
 import sys
 import multiprocessing
@@ -54,15 +54,16 @@ if __name__ == '__main__' :
             #       mc.distributeProcess(keyword, processes)
             #       sys.stdout.flush()
             #       print("Community "+keyword+" crawling finish. spend time :",(datetime.now()-community_start))
-            processes = [mc.multiCrawlingNaverblog]
+            
+            processes = [mc.multiCrawlingYoutube]
             start = datetime.now()
             for keyword in keywords:
                   community_start = datetime.now()
                   print("Community "+keyword+" crawling start.")
                   mc.distributeProcess(keyword, processes)
                   sys.stdout.flush()
-                  print("naverblog/ "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
-
+                  print("youtube/ "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
+      
             processes = [mc.multiCrawlingSlrclub]
             start = datetime.now()
             for keyword in keywords:
@@ -72,14 +73,7 @@ if __name__ == '__main__' :
                   sys.stdout.flush()
                   print("slrclub/ "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
       
-            processes = [mc.multiCrawlingtistory]
-            start = datetime.now()
-            for keyword in keywords:
-                  community_start = datetime.now()
-                  print("Community "+keyword+" crawling start.")
-                  mc.distributeProcess(keyword, processes)
-                  sys.stdout.flush()
-                  print("tstory/ "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
+           
 
             processes = [mc.multiCrawlingNaverNews, mc.multiCrawlingDaum, mc.multiCrawlingYgosu, mc.multiCrawlingHygall]
             start = datetime.now()
@@ -98,16 +92,9 @@ if __name__ == '__main__' :
                   sys.stdout.flush()
                   print("Community "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
 
-            processes = [mc.multiCrawlingNaver]
-            start = datetime.now()
-            for keyword in keywords:
-                  community_start = datetime.now()
-                  print("Community "+keyword+" crawling start.")
-                  mc.distributeProcess(keyword, processes)
-                  sys.stdout.flush()
-                  print("Community "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))      
+    
             
-            processes = [mc.multiCrawlingDcinside, mc.multiCrawlingPann, mc.multiCrawlingBobae,  mc.multiCrawlingMlbpark]
+            processes = [mc.multiCrawlingDcinside, mc.multiCrawlingPann,  mc.multiCrawlingMlbpark]
             start = datetime.now()
             for keyword in keywords:
                   community_start = datetime.now()
@@ -125,17 +112,36 @@ if __name__ == '__main__' :
                   sys.stdout.flush()
                   print("Community "+keyword+" crawling finish. spend time :",(datetime.now()-community_start))
 
-      
-            # processes = []
-            # start = datetime.now()
-            # for keyword in keywords:
-            #       community_start = datetime.now()
-            #       print("Community "+keyword+" crawling start.")
-            #       mc.distributeProcess(keyword, processes)
-            #       sys.stdout.flush()
-            #       print("Community "+keyword+"
 
+            processes = [mc.multiCrawlingtistory]
+            start = datetime.now()
+            for keyword in keywords:
+                  community_start = datetime.now()
+                  print("Community "+keyword+" crawling start.")
+                  mc.distributeProcess(keyword, processes)
+                  sys.stdout.flush()
+                  print("tstory/ "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
 
+            processes = [mc.multiCrawlingNaver]
+            start = datetime.now()
+            for keyword in keywords:
+                  community_start = datetime.now()
+                  print("Community "+keyword+" crawling start.")
+                  mc.distributeProcess(keyword, processes)
+                  sys.stdout.flush()
+                  print("Community "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))  
+            
+
+            processes = [mc.multiCrawlingNaverblog]
+            start = datetime.now()
+            for keyword in keywords:
+                  community_start = datetime.now()
+                  print("Community "+keyword+" crawling start.")
+                  mc.distributeProcess(keyword, processes)
+                  sys.stdout.flush()
+                  print("naverblog/ "+keyword+" crawling finish. spend time : ",(datetime.now()-community_start))
+
+            
             processes = [mc.multiCrawlingNavercafe]
             start = datetime.now()
             for keyword in keywords:
@@ -144,6 +150,17 @@ if __name__ == '__main__' :
                   mc.distributeProcess(keyword, processes)
                   sys.stdout.flush()
                   print("navercafe/ "+keyword+" crawling finish. spend time :",(datetime.now()-community_start))
+
+            
+           
+            # processes = [mc.multiCrawlingFacebook]
+            # start = datetime.now()
+            # for keyword in keywords:
+            #       community_start = datetime.now()
+            #       print("Community "+keyword+" crawling start.")
+            #       mc.distributeProcess(keyword, processes)
+            #       sys.stdout.flush()
+            #       print("navercafe/ "+keyword+" crawling finish. spend time :",(datetime.now()-community_start))
 
             # processes = [mc.multiCrawlingInsta]
             # start = datetime.now()

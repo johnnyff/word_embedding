@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
-# Developer : Jeong Wooyoung, EGLAB, Hongik University
-# Contact   : gunyoung20@naver.com
+# Developer : Jeong Wooyoung, EGLAB, Hongik University , Dongin Kang
+# Contact   : gunyoung20@naver.com , rkd2016@gmail.com
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -741,7 +741,6 @@ class CrawlingHandler :
         ,'dfither'#던파
         ,'peopledisc'#척추질환
         ,'ketogenic'#저탄고지
-        ,'appleiphone'#애플 아사모,
         'dokchi'#독취사
         #,'kig' # 피터팬 방구하기
         ,'specup'#스펙업
@@ -826,7 +825,7 @@ class CrawlingHandler :
         ,'nyblog' #직구
         ,'parisienlook' #명품
         ]
-        self.distributeList(2, keyword, 'navercafe',cafe_list, self.navercafe_list_crawling)
+        self.distributeList(6, keyword, 'navercafe',cafe_list, self.navercafe_list_crawling)
 
 
     def distributeList(self, n, keyword, proc_name, list, func):
@@ -856,7 +855,10 @@ class CrawlingHandler :
             procs.append(Process(target=func, args=(i,keyword, docs)))
 
         for p in procs :
-            p.start()
+            try :
+                p.start()
+            except :
+                pass
         for p in procs :
             p.join()
 
@@ -1008,7 +1010,7 @@ class CrawlingHandler :
         = xpath_dict['isajime'] = xpath_dict['imsanbu'] =  xpath_dict['skybluezw4rh'] =  xpath_dict['msbabys'] = xpath_dict['3dpchip'] = xpath_dict['formsunmyeong']\
         = xpath_dict['bikecargogo'] = xpath_dict['temadica'] = xpath_dict['likeusstock'] = xpath_dict['lilka'] = xpath_dict['rapsup'] = xpath_dict['youloveu']= xpath_dict['jellyfishkimsejung']\
         = xpath_dict['soimarket'] = xpath_dict['fitthesize'] = xpath_dict['acnescar'] = xpath_dict['newsmaker'] = xpath_dict['ketogenic']\
-            ='//*[@id="info-search"]/form/button'
+        = xpath_dict['culturebloom'] = xpath_dict['onimobile'] =xpath_dict['stockstudys']  ='//*[@id="info-search"]/form/button'
 
         xpath_dict['gangmok'] = xpath_dict['inmacbook'] = xpath_dict['komusincafe'] = xpath_dict['campingfirst'] = xpath_dict['fifaco']\
         = xpath_dict['fx8300']= xpath_dict['movie02'] = xpath_dict['bebettergirls'] = xpath_dict['no1sejong'] = xpath_dict['kookminlease']\
@@ -1023,10 +1025,10 @@ class CrawlingHandler :
         = xpath_dict['junkart'] = xpath_dict['kyungmammo'] = xpath_dict['masanmam'] = xpath_dict['30talmo'] = xpath_dict['themukja'] = xpath_dict['idiolle']\
         = xpath_dict['perfumelove'] =xpath_dict['smartbargain'] = xpath_dict['jpnstory'] = xpath_dict['warcraftgamemap'] = xpath_dict['firenze']\
         =xpath_dict['jpnstory'] = xpath_dict['pnmath']=xpath_dict['mhs01'] = xpath_dict['rainup'] = xpath_dict['develoid'] = xpath_dict['army58cafe']\
-        = xpath_dict['onimobile']= xpath_dict['chuldo'] = xpath_dict['remonterrace'] = xpath_dict['lessoninfo']= xpath_dict['as6060'] = xpath_dict['lfckorea'] \
+        = xpath_dict['chuldo'] = xpath_dict['remonterrace'] = xpath_dict['lessoninfo']= xpath_dict['as6060'] = xpath_dict['lfckorea'] \
         = xpath_dict['nyblog']= xpath_dict['parisienlook']= xpath_dict['hotdealcommunity']= xpath_dict['ttoksun2']= xpath_dict['bnjob'] = xpath_dict['cosmania']\
         = xpath_dict['mana129']= xpath_dict['dangsamo']= xpath_dict['chuldo']= xpath_dict['ndslromdown2']= xpath_dict['2013platonic']= xpath_dict['navercafezz']\
-        = '//*[@id="cafe-search"]/form/button'
+        = xpath_dict['rksghwhantk'] = '//*[@id="cafe-search"]/form/button'
      
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--headless')
@@ -1038,9 +1040,9 @@ class CrawlingHandler :
         chrome_options.add_argument('--incognito')
         chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)#driver 변수 만들 때 단순히 chromedriver 위치만 적어주는 게 아니라 chrome_options라는 이름의 인자를 같이 넘겨줘야함
-
+        driver.execute_script('window.open("about:blank", "_blank");')
         #이 인자 값으로 위에 추가적인 인자를 넘겨줌
-        driver.implicitly_wait(3)
+        driver.implicitly_wait(5)
         driver.switch_to_window(driver.window_handles[i-1])
         # pyautogui.keyDown('ctrl')
         # pyautogui.keyDown('shift')
@@ -1068,7 +1070,11 @@ class CrawlingHandler :
             #if K < len(cafe_list)-1: K+=1;continue
             progressBar(K, len(cafe_list))
             K+=1
-            xpath = xpath_dict[cafe]
+            try :
+                xpath = xpath_dict[cafe]
+            except:
+                print(cafe, " error")
+                continue
             search_url = "https://cafe.naver.com/"
             cur_url = search_url+cafe
             driver.get(cur_url)
@@ -1300,107 +1306,135 @@ class CrawlingHandler :
                 if flag == False: break
                 driver.switch_to.default_content()
                 page+=1
+                if(page ==21): break
         driver.close()
         return docs  # [url,title,date,author,text]
 
-    def facebook_list_crawling(self,keyword):
-        query = self.quote(keyword)
-        docs = []
-        news_list = [['yonhap','/html/body/div[1]/div[3]/div[1]/div/div/div[2]/div[2]/div/div[3]/div[1]/div/div/div[1]/div/div[1]/div/div/div/div/'], ['news1kr','//*[@id="PageTimelineSearchPagelet_204993636204108"]/div/div/div/div/'],['newsis.news','//*[@id="PageTimelineSearchPagelet_146136618768529"]/div/div/div/div/'],['chosun','//*[@id="PageTimelineSearchPagelet_376570488117"]/div/div/div/div/'],['joongang','//*[@id="PageTimelineSearchPagelet_155192444524300"]/div/div/div/div/'],['dongamedia','//*[@id="PageTimelineSearchPagelet_253942034624352"]/div/div/div/div/'],['hankyoreh','//*[@id="PageTimelineSearchPagelet_113685238657736"]/div/div/div/div/'],['kyunghyangshinmun','//*[@id="PageTimelineSearchPagelet_161649467207997"]/div/div/div/div/'],['OhmyNewsKorea','//*[@id="PageTimelineSearchPagelet_167079259973336"]/div/div/div/div/'],['sisain','//*[@id="PageTimelineSearchPagelet_154189147958193"]/div/div/div/div/'],['ytn.co.kr','//*[@id="PageTimelineSearchPagelet_237776059583039"]/div/div/div/div/'],['MBCnews','//*[@id="PageTimelineSearchPagelet_136802662998779"]/div/div/div/div/'],['kbsnews','//*[@id="PageTimelineSearchPagelet_121798157879172"]/div/div/div/div/'],['SBS8news','//*[@id="PageTimelineSearchPagelet_181676841847841"]/div/div/div/div/'],['jtbcnews','//*[@id="PageTimelineSearchPagelet_240263402699918"]/div/div/div/div/'],['hkilbo','//*[@id="PageTimelineSearchPagelet_157370204315766"]/div/div/div/div/'],['nocutnews','//*[@id="PageTimelineSearchPagelet_193441624024392"]/div/div/div/div/'],['mt.co.kr','//*[@id="PageTimelineSearchPagelet_119675661434875"]/div/div/div/div/'],['kukmindaily','//*[@id="PageTimelineSearchPagelet_118992638190529"]/div/div/div/div/'],['segyetimes' ,'//*[@id="PageTimelineSearchPagelet_146119315469421"]/div/div/div/div/']]
-        search_url = 'https://www.facebook.com'
-        had_url = self.sh.loadURL('facebook',keyword)
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
-        driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
-        driver.get(search_url)
-        try :
-            Id = driver.find_element_by_name('email')
-            Id.send_keys('elapinsta@gmail.com')
-            password = driver.find_element_by_id('pass')
-            password.send_keys('##sangsoo1')
-            password.submit()
-            time.sleep(1)
-            keyword_area = driver.find_element_by_xpath('p')
-            keyword_area.send_keys(keyword)
-            keyword_area.submit()
-        except : pass
+    # def multiprocessing_facebook(self,keyword):
+    #     press_list = [['yonhap',''] ]
+
+    #     self.distributeList(2, keyword, 'facebook',press_list, self.facebook_list_crawling)
         
-        time.sleep(1)  # login complete
-        temp_list = [['yonhap',''] ]
-        for news in temp_list:        
-            search_url = 'https://www.facebook.com/pg/'+news[0]+'/posts/?ref=page_internal'
-            driver.get(search_url)
-            time.sleep(10)
-            blank = driver.find_element_by_class_name('_58al')
-            blank.send_keys(keyword)
-            button = driver.find_element_by_class_name('_3fbq._4jy0._4jy3._517h._51sy._42ft').click()
+        
+    # def facebook_list_crawling(self,keyword, press_list):
+    #     query = self.quote(keyword)
+    #     docs = []
+    #     news_list = [['yonhap','/html/body/div[1]/div[3]/div[1]/div/div/div[2]/div[2]/div/div[3]/div[1]/div/div/div[1]/div/div[1]/div/div/div/div/'], ['news1kr','//*[@id="PageTimelineSearchPagelet_204993636204108"]/div/div/div/div/'],['newsis.news','//*[@id="PageTimelineSearchPagelet_146136618768529"]/div/div/div/div/'],['chosun','//*[@id="PageTimelineSearchPagelet_376570488117"]/div/div/div/div/'],['joongang','//*[@id="PageTimelineSearchPagelet_155192444524300"]/div/div/div/div/'],['dongamedia','//*[@id="PageTimelineSearchPagelet_253942034624352"]/div/div/div/div/'],['hankyoreh','//*[@id="PageTimelineSearchPagelet_113685238657736"]/div/div/div/div/'],['kyunghyangshinmun','//*[@id="PageTimelineSearchPagelet_161649467207997"]/div/div/div/div/'],['OhmyNewsKorea','//*[@id="PageTimelineSearchPagelet_167079259973336"]/div/div/div/div/'],['sisain','//*[@id="PageTimelineSearchPagelet_154189147958193"]/div/div/div/div/'],['ytn.co.kr','//*[@id="PageTimelineSearchPagelet_237776059583039"]/div/div/div/div/'],['MBCnews','//*[@id="PageTimelineSearchPagelet_136802662998779"]/div/div/div/div/'],['kbsnews','//*[@id="PageTimelineSearchPagelet_121798157879172"]/div/div/div/div/'],['SBS8news','//*[@id="PageTimelineSearchPagelet_181676841847841"]/div/div/div/div/'],['jtbcnews','//*[@id="PageTimelineSearchPagelet_240263402699918"]/div/div/div/div/'],['hkilbo','//*[@id="PageTimelineSearchPagelet_157370204315766"]/div/div/div/div/'],['nocutnews','//*[@id="PageTimelineSearchPagelet_193441624024392"]/div/div/div/div/'],['mt.co.kr','//*[@id="PageTimelineSearchPagelet_119675661434875"]/div/div/div/div/'],['kukmindaily','//*[@id="PageTimelineSearchPagelet_118992638190529"]/div/div/div/div/'],['segyetimes' ,'//*[@id="PageTimelineSearchPagelet_146119315469421"]/div/div/div/div/']]
+    #     search_url = 'https://www.facebook.com'
+    #     had_url = self.sh.loadURL('facebook',keyword)
+    #     chrome_options = webdriver.ChromeOptions()
+    #     chrome_options.add_argument('--headless')
+    #     chrome_options.add_argument('--no-sandbox')
+    #     chrome_options.add_argument('--disable-dev-shm-usage')
+    #     chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
+    #     driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
+    #     driver.get(search_url)
+    #     try :
+    #         Id = driver.find_element_by_name('email')
+    #         Id.send_keys('elapinsta@gmail.com')
+    #         password = driver.find_element_by_id('pass')
+    #         password.send_keys('##sangsoo1')
+    #         password.submit()
+    #         time.sleep(1)
+    #         keyword_area = driver.find_element_by_xpath('p')
+    #         keyword_area.send_keys(keyword)
+    #         keyword_area.submit()
+    #     except : pass
+        
+    #     time.sleep(1)  # login complete
+    #     for news in press_list:        
+    #         search_url = 'https://www.facebook.com/pg/'+news[0]+'/posts/?ref=page_internal'
+    #         driver.get(search_url)
+    #         time.sleep(3)
+    #         search_button = driver.find_element_by_css_selector('div > div:nth-child(1) > div > div.rq0escxv.l9j0dhe7.du4w35lb > div > div > div.j83agx80.cbu4d94t.d6urw2fd.dp1hu0rb.l9j0dhe7.du4w35lb > div.l9j0dhe7.dp1hu0rb.cbu4d94t.j83agx80 > div.rq0escxv.du4w35lb.rek2kq2y.lpgh02oy > div > div > div > div.rq0escxv.l9j0dhe7.du4w35lb.j83agx80.cbu4d94t.pfnyh3mw.d2edcug0.hpfvmrgz.o8rfisnq > div > div > div:nth-child(3) > div')
+    #         search_button.click()                               
+    #         time.sleep(2)
+    #         input_box = driver.find_element_by_css_selector("div > div:nth-child(1) > div > div:nth-child(7) > div > div > div.rq0escxv.l9j0dhe7.du4w35lb > div > div.iqfcb0g7.tojvnm2t.a6sixzi8.k5wvi7nf.q3lfd5jv.pk4s997a.bipmatt0.cebpdrjk.qowsmv63.owwhemhu.dp1hu0rb.dhp61c6y.l9j0dhe7.iyyx5f41.a8s20v7p > div > div > div > div > div > div > div.j83agx80.buofh1pr.dflh9lhu.scb9dxdr > div > div > label > input")
+    #         input_box.send_keys(keyword)
+    #         time.sleep(2)
+    #         input_box.send_keys(Keys.RETURN)
+    #         time.sleep(2)
+
+    #         last_height = driver.execute_script("return document.body.scrollHeight")
+    #         temp_cnt = 0 
+    #         while True:
+    #             driver.execute_script("window.scrollTo(0,document.body.scrollHeight);")
+    #             time.sleep(3)
+    #             cur_height = driver.execute_script("return document.body.scrollHeight")
+    #             if(last_height == cur_height):
+    #                 break
+    #             last_height = cur_height
+    #             temp_cnt +=1
+
+    #             if(temp_cnt == 20):
+    #                 break
             
-    #        public = driver.find_element_by_class_name('_55sh._1ka1').click()
-    #        time.sleep(1)
-            last_height = driver.execute_script("return document.body.scrollHeight")
-#            for i in range(0,1):
-            while True:
-                driver.execute_script("window.scrollTo(0,document.body.scrollHeight);")
-                time.sleep(1)
-                cur_height = driver.execute_script("return document.body.scrollHeight")
-                response = driver.page_source
-                if not response: return docs
-                soup = BeautifulSoup(response,"lxml")
-                containers = soup.find("div",{"class":"_1yt"}).find_all("div")
-                for container in containers:
-                    try:
-                        div = container.find("div",{"class":"_o02"}).find("div",{"class":"_307z"}).find_all("div")
-                        comment = div[-1].find("span",{"class":"_78k8"}).find("a")
-                        a = comment['href']
-                        if a in had_url: pass
-                        had_url.append(a)
-             #           print(a)
-                        docs.append([a,keyword,news])
-                    except Exception as e:
-                        pass
-                try:
-                    button = driver.find_element_by_class_name('pam.uiBoxLightblue.uiMorePagerPrimary').click()
-                except Exception as e:
-                    print(e)
-                    break
-            #    print(last_height)
-            #    print(cur_height)
-                last_height = cur_height
-            for document in docs:
-                try:
-                    driver.get(document[0])
-                except Exception as e: print(e);continue
-                time.sleep(4)
-                author = ""; 
-                contents = ""
-             #   print(document[0])
-                response = driver.page_source
-                if not response: continue
-                soup = BeautifulSoup(response,"lxml")
-                try:
-                    contents = soup.find("span",{"class":"hasCaption"}).text
-             #       print(contents)
-                except Exception as e: pass
-                try:
-                    lis = soup.find("div",{"class":"_6iiv _6r_e"}).find("ul",{"class":"_77bp"}).find_all("li")
-                except Exception as e: pass
-                comments =''
-                try:
-                    for li in lis:
-                        comments += li.find("div",{"class":"_72vr"}).find("span",{"dir":"ltr"}).find("span",{"class":"_3l3x"}).text
-                except Exception as e: print(e);continue
-                if len(contents+comments)>0:
-                    #contemts = contents_limit(contents+comments)
-                    contents +=comments
-                    document+= [author,self.parseContents(contents)]
-                    self.sh.saveFacebookDoc(keyword,document)
 
-        driver.close()
+    #         container = driver.find_elements_by_css_selector("div.bp9cbjyn>div.gtad4xkn:nth-child(2) div")
+    #         for cont in container:
+    #             cont.click()
+    #             time.sleep(1)
+                
+    #             #댓글더보기
+    #             try :
+    #                 driver.find_element_by_css_selector
 
-        return docs
+    #         response = driver.page_source
+    #         if not response: return docs
+    #         soup = BeautifulSoup(response,"lxml")
+    #         containers = soup.find("div",{"class":"_1yt"}).find_all("div")
+    #         for container in containers:
+    #             try:
+    #                 div = container.find("div",{"class":"_o02"}).find("div",{"class":"_307z"}).find_all("div")
+    #                 comment = div[-1].find("span",{"class":"_78k8"}).find("a")
+    #                 a = comment['href']
+    #                 if a in had_url: pass
+    #                 had_url.append(a)
+    #         #           print(a)
+    #                 docs.append([a,keyword,news])
+    #             except Exception as e:
+    #                 pass
+    #         try:
+    #             button = driver.find_element_by_class_name('pam.uiBoxLightblue.uiMorePagerPrimary').click()
+    #         except Exception as e:
+    #             print(e)
+    #             break
+                
+    #         #    print(last_height)
+    #         #    print(cur_height)
+                
+    #         for document in docs:
+    #             try:
+    #                 driver.get(document[0])
+    #             except Exception as e: print(e);continue
+    #             time.sleep(4)
+    #             author = ""; 
+    #             contents = ""
+    #          #   print(document[0])
+    #             response = driver.page_source
+    #             if not response: continue
+    #             soup = BeautifulSoup(response,"lxml")
+    #             try:
+    #                 contents = soup.find("span",{"class":"hasCaption"}).text
+    #          #       print(contents)
+    #             except Exception as e: pass
+    #             try:
+    #                 lis = soup.find("div",{"class":"_6iiv _6r_e"}).find("ul",{"class":"_77bp"}).find_all("li")
+    #             except Exception as e: pass
+    #             comments =''
+    #             try:
+    #                 for li in lis:
+    #                     comments += li.find("div",{"class":"_72vr"}).find("span",{"dir":"ltr"}).find("span",{"class":"_3l3x"}).text
+    #             except Exception as e: print(e);continue
+    #             if len(contents+comments)>0:
+    #                 #contemts = contents_limit(contents+comments)
+    #                 contents +=comments
+    #                 document+= [author,self.parseContents(contents)]
+    #                 self.sh.saveFacebookDoc(keyword,document)
+
+    #     driver.close()
+
+    #     return docs
     def facebook_docs_crawling(self, process, keyword, docs):
         
         count = 1
@@ -4940,7 +4974,7 @@ class CrawlingHandler :
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        #chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
+        chrome_options.add_experimental_option("debuggerAddress","127.0.0.1:9222")
         driver = webdriver.Chrome('./chromedriver',chrome_options=chrome_options)
         #print(document[0])
         driver.get(document[0])
@@ -4954,6 +4988,7 @@ class CrawlingHandler :
         #/html/body/ytd-app/div/ytd-page-manager/ytd-watch-flexy/div[4]
         comments=""
         date = ""
+        author =""
         try:
             date = driver.find_element_by_xpath('//*[@id="info-strings"]/yt-formatted-string').text
             date=date.split('. ')

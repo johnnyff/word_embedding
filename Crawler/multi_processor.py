@@ -42,11 +42,11 @@ class MultiCrawler :
         print('"'+keyword+'" list crawling start from naverblog.')
         crawler.naverblog_list_crawling(keyword)
 
-    def multiCrawlingFacebook(self,keyword, p_cnt=2):
-        crawler = CrawlingHandler()
-        print('"'+keyword+'" list crawling start from facebook.')
+    # def multiCrawlingFacebook(self,keyword, p_cnt=2):
+    #     crawler = CrawlingHandler()
+    #     print('"'+keyword+'" list crawling start from facebook.')
         
-        crawler.facebook_list_crawling(keyword)
+    #     crawler.multiprocessing_facebook(keyword)
         
  #       print ('"'+keyword+'" documents '+str(len(documents))+' crawling start from facebook.')
  #       self.distributeList(p_cnt,'facebook',keyword,documents,crawler.facebook_docs_crawling)
