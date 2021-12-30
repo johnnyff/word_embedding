@@ -137,12 +137,12 @@ def addCSVLine(dir, file, line_elements):
     with open(path, "a", newline=newline, encoding=encoding) as csv_file:
         cw = csv.writer(csv_file, delimiter=delimiter, quotechar=quotechar)
         cw.writerow(line_elements)
-def saveCSV(dir, file, list, columns=[], mode='w'):
+def saveCSV(dir, file, type, list, columns=[], mode='w'):
     file = reformFileName(file)
     tm = time.localtime()
     
-    if ".csv" not in file: file = file+'_'+str(tm.tm_year)+ str(tm.tm_mon)+str(tm.tm_mday)+'_'+str(tm.tm_hour)+':'+str(tm.tm_min)+':'+str(tm.tm_sec)+".csv"
-    else: temp = file.split('.csv'); file = temp[0] +'_'+ str(tm.tm_year)+ str(tm.tm_mon)+str(tm.tm_mday)+'_'+str(tm.tm_hour)+':'+str(tm.tm_min)+':'+str(tm.tm_sec)+".csv"
+    if ".csv" not in file: file = file+'_'+type+'_'+str(tm.tm_year)+ str(tm.tm_mon)+str(tm.tm_mday)+'_'+str(tm.tm_hour)+':'+str(tm.tm_min)+':'+str(tm.tm_sec)+".csv"
+    else: temp = file.split('.csv'); file = temp[0]+'_'+type +'_'+ str(tm.tm_year)+ str(tm.tm_mon)+str(tm.tm_mday)+'_'+str(tm.tm_hour)+':'+str(tm.tm_min)+':'+str(tm.tm_sec)+".csv"
     path = reformPath(dir, file)
     dir = path[:path.rfind('/')]
 

@@ -25,7 +25,6 @@ class StorageHandler :
         documents = self.getDocuments(keyword)
         #comments = self.getComments(keyword)
         contents = []
-        print(len(documents))
         try:
             for doc in documents:
                 temp = ""
@@ -81,7 +80,7 @@ class StorageHandler :
         documents = []
         for c_dir in fh.community_dirs:
             try:
-                docs = self.loadDoc(c_dir, "["+target+"]")
+                docs = self.loadDoc(c_dir, target)
             except:
                 continue
             if not docs is None:

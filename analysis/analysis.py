@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
-# Developer : Jeong Wooyoung , Park Jaesang
-# Contact   : gunyoung20@naver.com  , kw0095@naver.com
+# Developer : Dongin Kang
+# Contact   : rkd2016@gmail.com  , kw0095@naver.com
 from __future__ import print_function
 from sklearn.cluster import DBSCAN
 import re, sys
@@ -405,7 +405,7 @@ def getBertScore(contents,keyword,  num_of_words):
     print(" sec")
     return result
 
-def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
+def new_bertmodel(contents, keyword, num_of_words_pos, num_of_words_neg):
     start_time = time.time()
     # Setting based on the current model type 
     tokenizer = KoBertTokenizer.from_pretrained('monologg/kobert')
@@ -599,7 +599,7 @@ def bert_on_processing(contents, keyword, num_of_words_pos, num_of_words_neg):
         output1 = output1.squeeze()
         output1 = output1.detach().cpu().numpy()
 
-    ##(johnny : keyword vec 나중에 구현)
+  
         for i in range(0,len(t_positive)):
             totals +=1
             if t_positive[i] in senti_dict.keys():

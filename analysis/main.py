@@ -25,7 +25,7 @@ if __name__ == '__main__':
         contents = sh.getContents(target)#
 
 
-        if sys.argv[1] == 'bert':
+        if sys.argv[1] == 'bert_past':
             #Bert방식
             vec  = Vectorizer()
             tokenized_contents = vec.tokenizing(contents)
@@ -42,10 +42,10 @@ if __name__ == '__main__':
             print("Analysis time : " + str(result_time)+"sec")
             print("Save time : "+ str(save_time_end-save_time_start)+"sec")
 
-        elif sys.argv[1] == 'bert2':
+        elif sys.argv[1] == 'bert':
             num_of_words_pos = {}
             num_of_words_neg = {}
-            result1, result2 = analysis.bert_on_processing(contents,target,num_of_words_pos, num_of_words_neg)
+            result1, result2 = analysis.new_bertmodel(contents,target,num_of_words_pos, num_of_words_neg)
             result_time = time.time()-start
             save_time_start = time.time()
             sh.saveBertWords(result1,"positive", num_of_words_pos,file
